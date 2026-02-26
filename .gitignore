@@ -1,0 +1,116 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+
+*~
+$RECYCLE.BIN/
+.angular/
+/.angular/cache
+.AppleDouble
+application-local.properties
+application-local.yml
+/bazel-out
+bazel-out/
+build/
+.c9/
+*.class
+.classpath
+# Compiled output
+/connect.lock
+/coverage
+coverage/
+Desktop.ini
+/dist
+dist/
+.DS_Store
+*.ear
+ehthumbs.db
+.env
+.env.development.local
+.env.local
+.env.production.local
+.env.test.local
+.history/*
+.idea/
+# IDEs and editors
+*.iml
+*.ipr
+*.iws
+*.jar
+*.launch
+/libpeerconnection.log
+*.log
+logs/
+.LSOverride
+# Miscellaneous
+*.nar
+*.njsproj
+# Node
+/node_modules
+node_modules/
+npm-debug.log
+*.ntvs*
+out/
+/out-tsc
+out-tsc/
+.project
+*.rar
+.sass-cache/
+__screenshots__/
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+.settings/
+*.sln
+!**/src/main/**/build/
+!**/src/test/**/build/
+*.sublime-workspace
+*.suo
+*.swp
+# System files
+target/
+*.tar.gz
+testem.log
+Thumbs.db
+/tmp
+tmp/
+/typings
+# Visual Studio Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/mcp.json
+!.vscode/settings.json
+!.vscode/tasks.json
+*.war
+yarn-error.log
+*.zip
