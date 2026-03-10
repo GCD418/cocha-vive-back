@@ -53,7 +53,7 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_status", nullable = false, length = 20)
-    private EventStatus eventStatus;
+    private EventStatus eventStatus = EventStatus.APPROVED;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by_admin_id")
