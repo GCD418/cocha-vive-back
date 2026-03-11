@@ -20,7 +20,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     private String names;
@@ -60,5 +60,5 @@ public class User {
     private Boolean isActive = true;
 
     @Column(name = "modified_by_user_id")
-    private long modifiedByUserId;
+    private Long modifiedByUserId;
 }
