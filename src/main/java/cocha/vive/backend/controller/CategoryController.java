@@ -1,6 +1,7 @@
 package cocha.vive.backend.controller;
 
 import cocha.vive.backend.model.Category;
+import cocha.vive.backend.model.dto.CategoryDTO;
 import cocha.vive.backend.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class CategoryController {
     }
 
     @PostMapping("/categories")
-    public Category CreateCategory(@RequestBody Category category){
+    public Category CreateCategory(@RequestBody CategoryDTO category){
         return categoryService.create(category);
     }
 
@@ -31,7 +32,7 @@ public class CategoryController {
         return categoryService.findByName(name);
     }
 
-    @DeleteMapping("/employees/{id}/{userId}")
+    @DeleteMapping("/categories/{id}/{userId}")
     public ResponseEntity<Map<String, Boolean>> delete(@PathVariable("id") Long id, @PathVariable("userId") Long userId) {
         categoryService.delete(id, userId);
         Map<String, Boolean> response = new HashMap<>();
