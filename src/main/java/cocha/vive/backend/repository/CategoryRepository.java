@@ -21,5 +21,5 @@ public interface CategoryRepository extends JpaRepository<Category, Long>,
         "c.updatedAt = CURRENT_TIMESTAMP, " +
         "c.modifiedByUserId = :userId " +
         "WHERE c.id = :id")
-    void softDelete(@Param("id") long id, @Param("userId") long userId);
+    void softDelete(@Param("id") Long id, @Param("userId") Long userId);
 }

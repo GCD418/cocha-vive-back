@@ -6,6 +6,7 @@ import cocha.vive.backend.model.dto.CategoryDTO;
 import cocha.vive.backend.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,7 +31,8 @@ public class CategoryService {
             .orElseThrow(() -> new ResourceNotFoundException("There is no category with name: " + name));
     }
 
-    public void delete(long id, long requestingUserId){
+    @Transactional
+    public void delete(Long id, Long requestingUserId){
         categoryRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Not Found Category"));
         categoryRepository.softDelete(id, requestingUserId);

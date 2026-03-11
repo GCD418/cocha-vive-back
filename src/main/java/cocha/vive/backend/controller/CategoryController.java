@@ -28,7 +28,7 @@ public class CategoryController {
     }
 
     @GetMapping("/categories/name")
-    public Category FindByName(@RequestBody String name){
+    public Category FindByName(@RequestParam(name = "name") String name){
         return categoryService.findByName(name);
     }
 
