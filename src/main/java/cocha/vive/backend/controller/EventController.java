@@ -3,9 +3,7 @@ package cocha.vive.backend.controller;
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,4 +18,10 @@ public class EventController {
     public List<Event> getAllEvents(){
         return eventRepository.findAll();
     }
+
+    @PostMapping("/events")
+    public Event createEvent(@RequestBody Event event) {
+        return eventRepository.save(event);
+    }
+
 }
