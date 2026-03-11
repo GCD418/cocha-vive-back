@@ -16,13 +16,19 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
-    public Category createCategory(Category category){
+    public Category create(Category category){
         return categoryRepository.save(category);
     }
 
-    public Category findCategoryByName(String name){
+    public Category findByName(String name){
         return categoryRepository.findByName(name)
             .orElseThrow(() -> new ResourceNotFoundException("There is no category with name: " + name));
+    }
+
+    public void delete(long id, long requestingUserId){
+        categoryRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Not Found Category"));
+        categoryRepository.softDelete(id, requestingUserId);
     }
 
 }
