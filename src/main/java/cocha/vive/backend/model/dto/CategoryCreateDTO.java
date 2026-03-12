@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Schema(description = "Category request DTO")
-public class CategoryDTO {
+public class CategoryCreateDTO {
     @NotBlank
     @Schema(description = "Category's name", example = "Music")
     private String name;

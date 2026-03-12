@@ -1,7 +1,7 @@
 package cocha.vive.backend.controller;
 
 import cocha.vive.backend.model.Category;
-import cocha.vive.backend.model.dto.CategoryDTO;
+import cocha.vive.backend.model.dto.CategoryCreateDTO;
 import cocha.vive.backend.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,7 +33,7 @@ public class CategoryController {
     @Operation(summary = "Create a new category")
     @ApiResponse(responseCode = "200", description = "Category created successfully")
     @PostMapping("/categories")
-    public Category CreateCategory(@RequestBody CategoryDTO category){
+    public Category CreateCategory(@RequestBody CategoryCreateDTO category){
         return categoryService.create(category);
     }
 

@@ -2,7 +2,7 @@ package cocha.vive.backend.service;
 
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.Category;
-import cocha.vive.backend.model.dto.CategoryDTO;
+import cocha.vive.backend.model.dto.CategoryCreateDTO;
 import cocha.vive.backend.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,11 +18,11 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
-    public Category create(CategoryDTO categoryDTO){
+    public Category create(CategoryCreateDTO categoryCreateDTO){
         return categoryRepository.save(Category.builder()
-            .name(categoryDTO.getName())
-            .description(categoryDTO.getDescription())
-            .identifyingIcon(categoryDTO.getIdentifyingIcon())
+            .name(categoryCreateDTO.getName())
+            .description(categoryCreateDTO.getDescription())
+            .identifyingIcon(categoryCreateDTO.getIdentifyingIcon())
             .build());
     }
 
