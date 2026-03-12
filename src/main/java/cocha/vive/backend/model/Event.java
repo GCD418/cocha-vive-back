@@ -43,6 +43,24 @@ public class Event {
     @JoinColumn(name = "organized_by_user_id", nullable = false)
     private User organizedByUser;
 
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
+
+    @Column(name = "short_place_description", columnDefinition = "text")
+    private String shortPlaceDescription;
+
+    @Column(name = "people_capacity", nullable = false)
+    private Integer peopleCapacity;
+
+    @Column(name = "date_start", nullable = false)
+    private LocalDateTime dateStart;
+
+    @Column(name = "date_end", nullable = false)
+    private LocalDateTime dateEnd;
+
     @Array(length = 10)
     @Column(columnDefinition = "text[]")
     private List<String> tags;
@@ -53,7 +71,7 @@ public class Event {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_status", nullable = false, length = 20)
-    private EventStatus eventStatus;
+    private EventStatus eventStatus = EventStatus.APPROVED;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by_admin_id")
