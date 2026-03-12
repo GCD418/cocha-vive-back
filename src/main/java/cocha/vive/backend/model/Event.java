@@ -49,6 +49,9 @@ public class Event {
     @Column(nullable = false)
     private Double longitude;
 
+    @Column(name = "short_place_description", columnDefinition = "text")
+    private String shortPlaceDescription;
+
     @Column(name = "people_capacity", nullable = false)
     private Integer peopleCapacity;
 
