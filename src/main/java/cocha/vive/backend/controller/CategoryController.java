@@ -2,7 +2,6 @@ package cocha.vive.backend.controller;
 
 import cocha.vive.backend.model.Category;
 import cocha.vive.backend.model.dto.CategoryCreateDTO;
-import cocha.vive.backend.model.dto.CategoryResponseDTO;
 import cocha.vive.backend.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,7 +26,7 @@ public class CategoryController {
     @Operation(summary = "Get all active categories")
     @ApiResponse(responseCode = "200", description = "List of categories retrieved successfully")
     @GetMapping("/categories")
-    public List<CategoryResponseDTO> GetAllCategories(){
+    public List<Category> GetAllCategories(){
         return categoryService.getAll();
     }
 
