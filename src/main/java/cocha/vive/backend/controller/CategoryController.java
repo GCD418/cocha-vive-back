@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/v1/")
+@RequestMapping("api/")
 @RequiredArgsConstructor
 @Tag(name = "Category", description = "Category basic CRUD operations")
 public class CategoryController {
