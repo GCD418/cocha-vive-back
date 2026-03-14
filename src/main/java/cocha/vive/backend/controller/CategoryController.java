@@ -23,6 +23,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1/")
+@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 @Tag(name = "Category", description = "Category entity operations")
 public class CategoryController {
