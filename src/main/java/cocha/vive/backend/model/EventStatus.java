@@ -1,7 +1,7 @@
-package cocha.vive.backend.model;
+    package cocha.vive.backend.model;
 
-public enum EventStatus {
-    APPROVED,
-    PENDING,
-    REJECTED
-}
+    public enum EventStatus {
+        APPROVED,
+        PENDING,
+        REJECTED
+    }
