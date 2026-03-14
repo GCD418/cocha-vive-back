@@ -69,5 +69,9 @@ public class EventController {
                 .orElseThrow(() ->new ResourceNotFoundException("Event not exists with id: "+id));
         return ResponseEntity.ok(event);
     }
+    @GetMapping("/events/upcoming")
+    public List<Event> getUpcomingEvents() {
+        return eventRepository.findAllByOrderByDateStartAsc();
+    }
 
 }
