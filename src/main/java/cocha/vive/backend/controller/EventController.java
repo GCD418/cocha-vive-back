@@ -75,4 +75,9 @@ public class EventController {
         return eventRepository.findActiveUpcoming();
     }
 
+    @GetMapping("/events/featured")
+    public List<Event> getFeaturedEvents(){
+        return eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+    }
+
 }
