@@ -9,9 +9,12 @@ import cocha.vive.backend.model.Event;
 import cocha.vive.backend.repository.CategoryRepository;
 import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
+import cocha.vive.backend.service.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,13 +31,16 @@ public class EventController {
     @Autowired
     public CategoryRepository categoryRepository;
 
+    @Autowired
+    public CloudinaryService cloudinaryService;
+
     @GetMapping("/events")
     public List<Event> getAllEvents(){
         return eventRepository.findAll();
     }
 
-    @PostMapping("/events")
-    public Event createEvent(@RequestBody EventRequest dto) {
+    @PostMapping(value = "/events")
+    public Event createEvent(@RequestPart("event") EventRequest dto, @RequestPart("images")List<MultipartFile> images) {
         User user = userRepository.findById(dto.getOrganizedByUserId())
             .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -55,7 +61,7 @@ public class EventController {
             .dateStart(dto.getDateStart())
             .dateEnd(dto.getDateEnd())
             .tags(dto.getTags())
-            .photoLinks(dto.getPhotoLinks())
+            .photoLinks(cloudinaryService.uploadImages(images))
             .eventStatus(EventStatus.APPROVED)
             .isActive(true)
             .build();
