@@ -13,4 +13,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query(value = "SELECT * FROM events WHERE is_active = true AND date_start > NOW() " +
         "ORDER BY date_start ASC LIMIT 4", nativeQuery = true)
     List<Event> findActiveUpcoming();
+
+    List<Event> findByIsActiveTrueAndIsFeaturedTrue();
 }

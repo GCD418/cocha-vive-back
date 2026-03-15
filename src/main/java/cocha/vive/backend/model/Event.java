@@ -69,6 +69,10 @@ public class Event {
     @Column(name = "photo_links", columnDefinition = "text[]")
     private List<String> photoLinks;
 
+    @Builder.Default
+    @Column(name = "is_featured", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isFeatured = false;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "event_status", nullable = false, length = 20)
     private EventStatus eventStatus = EventStatus.APPROVED;
