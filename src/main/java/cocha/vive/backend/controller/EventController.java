@@ -70,4 +70,9 @@ public class EventController {
         return ResponseEntity.ok(event);
     }
 
+    @GetMapping("/events/upcoming")
+    public List<Event> getUpcomingEvents(){
+        return eventRepository.findActiveUpcoming();
+    }
+
 }
