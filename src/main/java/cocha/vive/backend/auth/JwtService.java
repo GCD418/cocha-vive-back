@@ -1,4 +1,4 @@
-package cocha.vive.backend.service;
+package cocha.vive.backend.auth;
 
 import cocha.vive.backend.model.User;
 import io.jsonwebtoken.Claims;
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
