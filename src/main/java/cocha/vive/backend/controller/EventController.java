@@ -42,4 +42,9 @@ public class EventController {
         return eventService.getFeatured();
     }
 
+    @GetMapping("/events/category/{categoryId}")
+    public List<Event> getEventsByCategory(@PathVariable Long categoryId) {
+        return eventService.getEventsByCategoryId(categoryId);
+    }
+
 }
