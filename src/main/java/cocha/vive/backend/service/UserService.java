@@ -4,8 +4,10 @@ import cocha.vive.backend.model.User;
 import cocha.vive.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,7 +18,8 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User getByEmail(String email) {
+    @Transactional(readOnly = true)
+    public Optional<User> getByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 }

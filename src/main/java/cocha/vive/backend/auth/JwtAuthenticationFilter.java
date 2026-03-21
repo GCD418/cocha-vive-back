@@ -41,7 +41,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         userEmail = jwtService.extractUsername(jwt);
 
         if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = this.userService.getByEmail(userEmail);
+            User user = this.userService.getByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Token doesn't belong to a registered user"));
 
             if (jwtService.isTokenValid(jwt, user)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
