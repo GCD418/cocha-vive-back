@@ -45,6 +45,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "google_provider_id")
+    private String googleProviderId;
+
     @Column(name = "document_number", length = 14)
     private String documentNumber;
 
