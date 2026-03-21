@@ -68,4 +68,6 @@ public class EventService {
     public List<Event> getFeatured() {
         return eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
     }
+
+    public List<Event> getEventsByCategoryId(Long categoryId) { return eventRepository.findByCategoryId(categoryId); }
 }

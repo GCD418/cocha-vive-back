@@ -15,4 +15,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findActiveUpcoming();
 
     List<Event> findByIsActiveTrueAndIsFeaturedTrue();
+
+    List<Event> findByCategoryId(Long categoryId);
 }
