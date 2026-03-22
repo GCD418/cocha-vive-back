@@ -48,12 +48,12 @@ public class AuthController {
             if (idToken != null) {
                 GoogleIdToken.Payload payload = idToken.getPayload();
                 String email = payload.getEmail();
-                String googleId = payload.getSubject();
-                String name = (String) payload.get("given_name");
-                String lastName = (String) payload.get("family_name");
-                String photoUrl = (String) payload.get("picture");
 
                 User user = userService.getByEmail(email).orElseGet(() -> {
+                    String googleId = payload.getSubject();
+                    String name = (String) payload.get("given_name");
+                    String lastName = (String) payload.get("family_name");
+                    String photoUrl = (String) payload.get("picture");
                     UserCreateDTO newUser = new UserCreateDTO();
                     newUser.setEmail(email);
                     newUser.setRole("ROLE_USER");
@@ -64,11 +64,14 @@ public class AuthController {
                     return userService.create(newUser);
                 });
 
+                boolean requiresCI = (user.getDocumentNumber() == null || user.getDocumentNumber().trim().isEmpty());
+
                 Map<String, Object> extraClaims = new HashMap<>();
                 extraClaims.put("roles", user.getAuthorities());
+                extraClaims.put("requires_onboarding", requiresCI);
 
                 String internalToken = jwtService.generateToken(extraClaims, user);
-                return ResponseEntity.ok(new AuthResponse(internalToken));
+                return ResponseEntity.ok(new AuthResponse(internalToken, requiresCI));
 
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
