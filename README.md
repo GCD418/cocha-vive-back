@@ -14,6 +14,10 @@
   - [IntelliJ IDEA](#-intellij-idea)
   - [VS Code](#-vs-code)
   - [CLI (Terminal)](#-cli-terminal)
+- [Authentication and Authorization](#authentication-and-authorization)
+  - [Google Sign-In and Client ID Setup](#google-sign-in-and-client-id-setup)
+  - [Role Convention (Important)](#role-convention-important)
+  - [How Endpoint Restrictions Work](#how-endpoint-restrictions-work)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
 - [Contact](#contact)
@@ -35,7 +39,10 @@ CochaVive is a platform for discovering and publishing public events in Cochabam
 | **Hibernate** | ORM under the hood — maps Java classes to DB tables automatically |
 | **PostgreSQL** | Relational database, currently powered by Neon (It's awesome) |
 | **Lombok** | Kills boilerplate — no more writing getters, setters, constructors by hand |
-| **Cloudinary** *(coming soon)* | Cloud image storage for event photos |
+| **Spring Security** | Authentication and authorization for protected endpoints |
+| **JWT (JJWT)** | Stateless token generation and validation |
+| **Google API Client** | Verifies Google ID token on social login |
+| **Cloudinary** | Cloud image storage for event photos |
 | **SpringDoc OpenAPI (Swagger UI)** | Auto-generated interactive API docs |
 | **Spring DevTools** | Hot reload during development — saves your `Ctrl+C / mvn run` sanity |
 
@@ -104,9 +111,12 @@ The app reads its sensitive configuration from environment variables — no hard
 | `CLOUDINARY_CLOUD_NAME` | Your Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Your Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Your Cloudinary API secret |
+| `JWT_SECRET_KEY` | Base64-encoded secret used to sign JWT tokens |
+| `JWT_EXPIRATION_TIME` | JWT lifetime in milliseconds (example: `86400000` for 24h) |
+| `GOOGLE_CLIENT_ID` | OAuth Client ID used to verify Google ID tokens |
 
-> **Where do I get the Cloudinary credentials?**
-> Contact the **CochaVive** team. See [Contact](#contact) below.
+> **Where do I get the shared credentials (Cloudinary, JWT secret policy, team DB, etc.)?**
+> Contact the **CochaVive (Puy)** team. See [Contact](#contact) below.
 
 ---
 
@@ -124,6 +134,9 @@ DB_PASS=your_password
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+JWT_SECRET_KEY=your_base64_secret
+JWT_EXPIRATION_TIME=86400000
+GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
 5. Click **OK** and run. Done.
@@ -154,7 +167,10 @@ Create or edit `.vscode/launch.json` in the project root:
         "DB_PASS": "your_password",
         "CLOUDINARY_CLOUD_NAME": "your_cloud_name",
         "CLOUDINARY_API_KEY": "your_api_key",
-        "CLOUDINARY_API_SECRET": "your_api_secret"
+        "CLOUDINARY_API_SECRET": "your_api_secret",
+        "JWT_SECRET_KEY": "your_base64_secret",
+        "JWT_EXPIRATION_TIME": "86400000",
+        "GOOGLE_CLIENT_ID": "your_google_client_id"
       }
     }
   ]
@@ -176,6 +192,9 @@ export DB_PASS=your_password
 export CLOUDINARY_CLOUD_NAME=your_cloud_name
 export CLOUDINARY_API_KEY=your_api_key
 export CLOUDINARY_API_SECRET=your_api_secret
+export JWT_SECRET_KEY=your_base64_secret
+export JWT_EXPIRATION_TIME=86400000
+export GOOGLE_CLIENT_ID=your_google_client_id
 
 ./mvnw spring-boot:run
 ```
@@ -189,6 +208,9 @@ DB_PASS=your_password \
 CLOUDINARY_CLOUD_NAME=your_cloud_name \
 CLOUDINARY_API_KEY=your_api_key \
 CLOUDINARY_API_SECRET=your_api_secret \
+JWT_SECRET_KEY=your_base64_secret \
+JWT_EXPIRATION_TIME=86400000 \
+GOOGLE_CLIENT_ID=your_google_client_id \
 ./mvnw spring-boot:run
 ```
 
@@ -201,7 +223,72 @@ set DB_PASS=your_password
 set CLOUDINARY_CLOUD_NAME=your_cloud_name
 set CLOUDINARY_API_KEY=your_api_key
 set CLOUDINARY_API_SECRET=your_api_secret
+set JWT_SECRET_KEY=your_base64_secret
+set JWT_EXPIRATION_TIME=86400000
+set GOOGLE_CLIENT_ID=your_google_client_id
 mvnw.cmd spring-boot:run
+```
+
+---
+
+## Authentication and Authorization
+
+This backend uses a stateless security flow:
+
+1. Frontend gets a Google ID token.
+2. Frontend sends it to `POST /api/auth/google`.
+3. Backend verifies it using `GOOGLE_CLIENT_ID`.
+4. Backend creates/fetches the user and returns an internal JWT.
+5. Frontend sends that JWT in `Authorization: Bearer <token>` for protected endpoints.
+
+### Google Sign-In and Client ID Setup
+
+To get `GOOGLE_CLIENT_ID`:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a project (or use an existing one).
+3. Open **APIs & Services → OAuth consent screen** and configure the app.
+4. Open **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+5. Choose **Web application**.
+6. Add authorized origins used by the frontend (for local dev, usually `http://localhost:4200`).
+7. Copy the generated **Client ID** and set it as `GOOGLE_CLIENT_ID` in your environment.
+
+### Role Convention (Important)
+
+Roles in this project are stored as plain strings in the `users.role` field and converted to `GrantedAuthority` directly.
+
+- Every role value **must start with `ROLE_`**.
+- Valid examples: `ROLE_USER`, `ROLE_ADMIN`.
+- Invalid examples: `USER`, `ADMIN`.
+
+Why? Because Spring checks `hasRole("ADMIN")` against authority `ROLE_ADMIN` internally. If the prefix is missing, authorization will fail even if the user "looks" admin in the DB.
+
+### How Endpoint Restrictions Work
+
+There are two levels of restrictions in this codebase:
+
+1. Global URL rules in `SecurityConfig`:
+  - `/api/auth/**` is public.
+  - `GET /api/events/**` and `GET /api/categories/**` are public.
+  - `/api/admin/**` requires admin role.
+  - Any other endpoint requires authentication.
+
+2. Method-level rules with `@PreAuthorize` in controllers:
+  - `@PreAuthorize("hasAnyRole('USER')")` for creating events.
+  - `@PreAuthorize("hasAnyRole('ADMIN')")` for creating categories.
+
+When adding a new endpoint, pick one of these patterns:
+
+- Public endpoint: add explicit `permitAll()` matcher.
+- Any logged-in user: keep it under `.anyRequest().authenticated()`.
+- Role-restricted endpoint: add `@PreAuthorize("hasRole('ADMIN')")` or `@PreAuthorize("hasAnyRole('USER','ADMIN')")`.
+
+Quick example:
+
+```java
+@PostMapping("/admin/reports")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<?> createReport() { ... }
 ```
 
 ---
@@ -214,12 +301,23 @@ src/main/java/cocha/vive/backend/
 ├── BackendApplication.java         ← Entry point. The app starts here. Don't touch it.
 │
 ├── config/
-│   └── SwaggerConfig.java          ← OpenAPI/Swagger UI setup and API metadata.
+│   ├── SwaggerConfig.java          ← OpenAPI/Swagger UI setup and API metadata.
+│   ├── CloudinaryConfig.java       ← Cloudinary client configuration.
+│   └── CorsConfig.java             ← CORS setup shared by the API.
+│
+├── auth/
+│   ├── SecurityConfig.java         ← Security filter chain, CORS, URL-level access rules.
+│   ├── JwtAuthenticationFilter.java← Reads Bearer token and sets SecurityContext.
+│   ├── JwtService.java             ← Generates and validates JWT tokens.
+│   ├── AuthController.java         ← Google token login endpoint (`/api/auth/google`).
+│   ├── AuthResponse.java           ← Authentication response DTO.
+│   └── TokenDto.java               ← Incoming Google token payload.
 │
 ├── controller/
 │   └── CategoryController.java     ← HTTP layer. Receives requests, returns responses.
 │                                     One controller per entity (Category, Event, User...).
 │                                     No business logic lives here.
+│                                     Also includes auth-protected actions via `@PreAuthorize`.
 │
 ├── exception/
 │   ├── GlobalExceptionHandler.java ← Catches all unhandled exceptions across the app
@@ -231,7 +329,6 @@ src/main/java/cocha/vive/backend/
 │   ├── Event.java
 │   ├── EventStatus.java            ← Enum for event states (APPROVED, PENDING, etc.).
 │   ├── User.java
-│   ├── UserRole.java               ← Enum for user roles (ADMIN, USER, etc.).
 │   │
 │   └── dto/
 │       ├── CategoryCreateDTO.java  ← Data Transfer Objects. Used as request/response bodies.
@@ -245,8 +342,9 @@ src/main/java/cocha/vive/backend/
 │   └── UserRepository.java
 │
 └── service/
-    └── CategoryService.java        ← Business logic layer. Controllers call services.
+  └── CategoryService.java        ← Business logic layer. Controllers call services.
                                       Services call repositories. Keep it clean.
+                    Also includes user/event services used by JWT auth flow.
 ```
 
 ### The flow of a request
@@ -279,7 +377,7 @@ It lists every endpoint, their expected inputs, possible responses, and lets you
 
 ## Contact
 
-This project is developed by **CochaVive**.
+This project is developed by **CochaVive (Puy)**.
 
 For environment credentials (Cloudinary keys, shared DB access, etc.), reach out to the team:
 
