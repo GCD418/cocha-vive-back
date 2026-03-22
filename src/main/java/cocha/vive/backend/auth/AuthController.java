@@ -60,7 +60,7 @@ public class AuthController {
                     newUser.setGoogleProviderId(googleId);
                     newUser.setName(name);
                     newUser.setFirstLastName(lastName);
-                    newUser.setDocumentNumber(photoUrl);
+                    newUser.setPhotoUrl(photoUrl);
                     return userService.create(newUser);
                 });
 

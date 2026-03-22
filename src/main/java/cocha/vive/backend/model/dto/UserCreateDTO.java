@@ -15,15 +15,13 @@ public class UserCreateDTO {
 
     private String firstLastName;
 
-    //private String secondLastName;
-
     private String email;
 
     private String googleProviderId;
 
-    private String documentNumber; //TEMPORALLY: will hold photoUrl
+    private String documentNumber;
 
-    //private String documentExtension;
+    private String photoUrl;
 
     private String role;
 }

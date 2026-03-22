@@ -42,8 +42,8 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column()
-    private String password;
+    @Column(name = "photo_url", columnDefinition = "TEXT")
+    private String photoUrl;
 
     @Column(name = "google_provider_id")
     private String googleProviderId;
