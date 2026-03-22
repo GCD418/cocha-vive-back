@@ -4,6 +4,7 @@ import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.UserCreateDTO;
 import cocha.vive.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,5 +37,15 @@ public class UserService {
             .googleProviderId(newUser.getGoogleProviderId())
             .build()
         );
+    }
+
+    @Transactional
+    public void updateDocumentNumber(String email, String documentNumber, String extension) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("Not Found User"));
+        user.setDocumentNumber(documentNumber);
+        user.setDocumentExtension(extension);
+
+        userRepository.save(user);
     }
 }
