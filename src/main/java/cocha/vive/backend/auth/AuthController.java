@@ -68,7 +68,7 @@ public class AuthController {
 
                 Map<String, Object> extraClaims = new HashMap<>();
                 extraClaims.put("roles", user.getAuthorities());
-                extraClaims.put("requires_onboarding", requiresCI);
+                extraClaims.put("requiresOnboarding", requiresCI);
 
                 String internalToken = jwtService.generateToken(extraClaims, user);
                 return ResponseEntity.ok(new AuthResponse(internalToken, requiresCI));
