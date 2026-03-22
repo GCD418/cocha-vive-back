@@ -42,13 +42,13 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column()
     private String password;
 
     @Column(name = "google_provider_id")
     private String googleProviderId;
 
-    @Column(name = "document_number", length = 14)
+    @Column(name = "document_number")
     private String documentNumber;
 
     @Column(name = "document_extension", length = 2)

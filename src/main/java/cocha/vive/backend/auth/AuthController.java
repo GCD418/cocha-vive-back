@@ -7,10 +7,10 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +34,9 @@ public class AuthController {
 
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> loginWithGoogle(@RequestBody TokenDto tokenDto) {
-        System.out.println("Token recibido: " + tokenDto.getToken());
+        if (tokenDto == null || tokenDto.getToken() == null || tokenDto.getToken().isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(), new GsonFactory())
@@ -73,8 +75,6 @@ public class AuthController {
             }
 
         } catch (Exception e) {
-            System.out.println("FALLO AQUI");
-            log.error("e: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
