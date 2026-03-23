@@ -87,4 +87,5 @@ public class EventService {
     public void cancelEvent(Long eventId) {
         updateStatus(eventId, EventStatus.CANCELLED);
     }
+    public List<Event> getEventsByCategoryId(Long categoryId) { return eventRepository.findByCategoryId(categoryId); }
 }

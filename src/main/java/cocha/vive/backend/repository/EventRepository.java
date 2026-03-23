@@ -27,4 +27,5 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                      @Param("status") EventStatus status,
                      @Param("userId") Long userId);
 
+    List<Event> findByCategoryId(Long categoryId);
 }
