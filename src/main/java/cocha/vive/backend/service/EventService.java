@@ -74,7 +74,7 @@ public class EventService {
     @Transactional
     public void updateStatus(Long eventId, EventStatus newStatus) {
         if(!eventRepository.existsById(eventId)) {
-            throw new EntityNotFoundException("Not Found Event");
+            throw new ResourceNotFoundException("Not Found Event");
         }
         int updated = eventRepository.updateStatus(eventId, newStatus, 1L);
 
