@@ -76,10 +76,12 @@ public class CategoryController {
         @ApiResponse(responseCode = "500", description = "Internal server error",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-    @DeleteMapping("/categories/{id}/{userId}")
-    public ResponseEntity<Map<String, Boolean>> delete(@Parameter(description = "ID of the category to delete") @PathVariable("id") Long id,
-                                                       @Parameter(description = "ID of the user making the operation") @PathVariable("userId") Long userId) {
-        categoryService.delete(id, userId);
+    @DeleteMapping("/categories/{id}")
+    public ResponseEntity<Map<String, Boolean>> delete(
+        @Parameter(description = "ID of the category to delete")
+        @PathVariable("id") Long id)
+    {
+        categoryService.delete(id);
         Map<String, Boolean> response = new HashMap<>();
         response.put("Killed", Boolean.TRUE);
         return ResponseEntity.ok(response);

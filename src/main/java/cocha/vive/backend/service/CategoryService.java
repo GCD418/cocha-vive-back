@@ -14,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
+    private final AuditService auditService;
     public List<Category> getAll(){
         return categoryRepository.findAll();
     }
@@ -32,10 +33,10 @@ public class CategoryService {
     }
 
     @Transactional
-    public void delete(Long id, Long requestingUserId){
+    public void delete(Long id){
         categoryRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Not Found Category"));
-        categoryRepository.softDelete(id, requestingUserId);
+        categoryRepository.softDelete(id, auditService.getActualUserId());
     }
 
 }
