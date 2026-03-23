@@ -14,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -88,4 +91,43 @@ public class EventService {
         updateStatus(eventId, EventStatus.CANCELLED);
     }
     public List<Event> getEventsByCategoryId(Long categoryId) { return eventRepository.findByCategoryId(categoryId); }
+
+    @Transactional
+    public Event update(Long eventId, EventRequest dto, List<MultipartFile> images) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+
+        if (!event.getOrganizedByUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You are not allowed to edit this event");
+        }
+
+        if (dto.getTitle() != null)                 event.setTitle(dto.getTitle());
+        if (dto.getShortDescription() != null)      event.setShortDescription(dto.getShortDescription());
+        if (dto.getDescription() != null)           event.setDescription(dto.getDescription());
+        if (dto.getCost() != null)                  event.setCost(dto.getCost());
+        if (dto.getLatitude() != null)              event.setLatitude(dto.getLatitude());
+        if (dto.getLongitude() != null)             event.setLongitude(dto.getLongitude());
+        if (dto.getShortPlaceDescription() != null) event.setShortPlaceDescription(dto.getShortPlaceDescription());
+        if (dto.getPeopleCapacity() != null)        event.setPeopleCapacity(dto.getPeopleCapacity());
+        if (dto.getDateStart() != null)             event.setDateStart(dto.getDateStart());
+        if (dto.getDateEnd() != null)               event.setDateEnd(dto.getDateEnd());
+        if (dto.getTags() != null)                  event.setTags(dto.getTags());
+
+        if (dto.getCategoryId() != null) {
+            Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+            event.setCategory(category);
+        }
+
+        if (images != null && !images.isEmpty()) {
+            event.setPhotoLinks(cloudinaryService.uploadImages(images));
+        }
+
+        event.setModifiedByUserId(currentUser.getId());
+
+        return eventRepository.save(event);
+    }
 }
