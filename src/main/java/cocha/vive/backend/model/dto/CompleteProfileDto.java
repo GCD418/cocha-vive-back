@@ -13,7 +13,7 @@ public record CompleteProfileDto(
 	String documentNumber,
 
 	@NotBlank
-	@Pattern(regexp = "^[A-Za-z]{2}$")
+	@Pattern(regexp = "^[0-9A-Z]{2}$")
 	@Schema(description = "Two-letter document extension in some duplicated document numbers", example = "1H")
 	String extension
 ) {

@@ -61,7 +61,7 @@ public class User implements UserDetails {
     private String documentNumber;
 
     @Column(name = "document_extension", length = 2)
-    @Schema(description = "Document extension", example = "LP")
+    @Schema(description = "Document extension", example = "1H")
     private String documentExtension;
 
     @Column(nullable = false)
@@ -99,7 +99,6 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        // Para Spring Security, el "username" de nuestro sistema será el correo
         return this.email;
     }
 
