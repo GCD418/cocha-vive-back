@@ -16,6 +16,7 @@
   - [CLI (Terminal)](#-cli-terminal)
 - [Authentication and Authorization](#authentication-and-authorization)
   - [Google Sign-In and Client ID Setup](#google-sign-in-and-client-id-setup)
+  - [Testing With OAuth Playground + HTTP Client](#testing-with-oauth-playground--http-client)
   - [Role Convention (Important)](#role-convention-important)
   - [How Endpoint Restrictions Work](#how-endpoint-restrictions-work)
 - [Project Structure](#project-structure)
@@ -252,6 +253,75 @@ To get `GOOGLE_CLIENT_ID`:
 5. Choose **Web application**.
 6. Add authorized origins used by the frontend (for local dev, usually `http://localhost:4200`).
 7. Copy the generated **Client ID** and set it as `GOOGLE_CLIENT_ID` in your environment.
+
+### Testing With OAuth Playground + HTTP Client
+
+If you want to test backend auth without frontend, this is the fastest workflow.
+
+#### 1) Get a Google ID token from OAuth Playground
+
+1. Open [Google OAuth 2.0 Playground](https://developers.google.com/oauthplayground/).
+2. Click the ⚙️ gear icon (top-right).
+3. Enable **Use your own OAuth credentials** (server-side style flow).
+4. Paste your OAuth **Client ID** and **Client Secret**.
+5. In Step 1, use scopes:
+   - `openid`
+   - `email`
+   - `profile`
+6. Click **Authorize APIs** and complete Google sign-in.
+7. Click **Exchange authorization code for tokens**.
+8. Copy `id_token` from the response.
+
+Important:
+- The `aud` claim inside that `id_token` must match your backend `GOOGLE_CLIENT_ID`.
+- If they do not match, `/api/auth/google` will reject the token.
+
+#### 2) Exchange Google token for internal JWT
+
+Use any HTTP client (Postman, Insomnia, VS Code REST Client, IntelliJ HTTP Client, curl).
+
+```http
+POST http://localhost:8080/api/auth/google
+Content-Type: application/json
+
+{
+  "token": "<google_id_token>"
+}
+```
+
+Expected response:
+
+```json
+{
+  "token": "<internal_jwt>",
+  "requiresOnboarding": false
+}
+```
+
+#### 3) Call protected endpoints with Bearer token
+
+```http
+POST http://localhost:8080/api/events
+Authorization: Bearer <internal_jwt>
+Content-Type: multipart/form-data
+```
+
+For JSON-only protected endpoints, same header applies:
+
+```http
+Authorization: Bearer <internal_jwt>
+```
+
+#### 4) Quick auth troubleshooting checklist
+
+- `401 Unauthorized` on `/api/auth/google`:
+  - `GOOGLE_CLIENT_ID` is missing or wrong.
+  - You are sending `access_token` instead of `id_token`.
+- `403 Forbidden` on protected endpoint:
+  - User role in DB does not have required authority.
+  - Role value is missing `ROLE_` prefix (for example `ADMIN` instead of `ROLE_ADMIN`).
+- JWT works in one request and fails later:
+  - Check `JWT_EXPIRATION_TIME` and server clock sync.
 
 ### Role Convention (Important)
 
