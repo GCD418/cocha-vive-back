@@ -44,4 +44,10 @@ public class EventController {
         return eventService.getFeatured();
     }
 
+    @PatchMapping("/events/{id}/cancel")
+    public ResponseEntity<Void> cancelEvent(@PathVariable Long id) {
+        eventService.cancelEvent(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

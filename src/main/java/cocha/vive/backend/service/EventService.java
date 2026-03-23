@@ -9,8 +9,10 @@ import cocha.vive.backend.model.dto.EventRequest;
 import cocha.vive.backend.repository.CategoryRepository;
 import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -67,5 +69,22 @@ public class EventService {
 
     public List<Event> getFeatured() {
         return eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+    }
+
+    @Transactional
+    public void updateStatus(Long eventId, EventStatus newStatus) {
+        if(!eventRepository.existsById(eventId)) {
+            throw new EntityNotFoundException("Not Found Event");
+        }
+        int updated = eventRepository.updateStatus(eventId, newStatus, 1L);
+
+        if (updated == 0) {
+            throw new EntityNotFoundException("Error updating Event Status");
+        }
+    }
+
+    @Transactional
+    public void cancelEvent(Long eventId) {
+        updateStatus(eventId, EventStatus.CANCELLED);
     }
 }
