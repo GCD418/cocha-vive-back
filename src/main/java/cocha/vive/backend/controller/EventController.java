@@ -6,6 +6,7 @@ import cocha.vive.backend.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,7 @@ public class EventController {
     }
 
     @PostMapping(value = "/events")
+    @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<Event> createEvent(@RequestPart("event") EventRequest dto, @RequestPart("images") List<MultipartFile> images) {
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.create(dto, images));
     }
