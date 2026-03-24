@@ -122,8 +122,18 @@ public class EventService {
             event.setCategory(category);
         }
 
+        List<String> updatedPhotos = new java.util.ArrayList<>();
+
+        if (dto.getPhotoLinks() != null) {
+            updatedPhotos.addAll(dto.getPhotoLinks());
+        }
+
         if (images != null && !images.isEmpty()) {
-            event.setPhotoLinks(cloudinaryService.uploadImages(images));
+            updatedPhotos.addAll(cloudinaryService.uploadImages(images)); // nuevas al final
+        }
+
+        if (!updatedPhotos.isEmpty()) {
+            event.setPhotoLinks(updatedPhotos);
         }
 
         event.setModifiedByUserId(currentUser.getId());

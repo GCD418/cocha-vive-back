@@ -1,7 +1,9 @@
 package cocha.vive.backend.controller;
 
+import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.CompleteProfileDto;
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
+import cocha.vive.backend.model.dto.UserMeDTO;
 import cocha.vive.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,10 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/users")
@@ -37,6 +36,19 @@ public class UserController {
         @ApiResponse(responseCode = "500", description = "Internal server error",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
+
+    @GetMapping("/me")
+    public ResponseEntity<UserMeDTO> getCurrentUser() {
+        String email = SecurityContextHolder.getContext()
+                           .getAuthentication()
+                           .getName();
+
+        User user = userService.getByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        return ResponseEntity.ok(new UserMeDTO(user));
+    }
+
     @PutMapping("/complete-profile")
     public ResponseEntity<Void> completeProfile(@Valid @RequestBody CompleteProfileDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
