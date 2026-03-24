@@ -34,7 +34,7 @@ public class EventService {
     }
 
     public Event create(EventRequest dto, List<MultipartFile> images) {
-        User user = userRepository.findById(dto.getOrganizedByUserId())
+        User user = userRepository.findById(auditService.getActualUserId())
             .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         Category category = categoryRepository.findById(dto.getCategoryId())
