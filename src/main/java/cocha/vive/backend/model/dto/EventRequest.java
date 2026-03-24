@@ -11,7 +11,6 @@ public class EventRequest {
     private String description;
     private Integer cost;
     private Long categoryId;
-    private Long organizedByUserId;
     private Double latitude;
     private Double longitude;
     private String shortPlaceDescription;

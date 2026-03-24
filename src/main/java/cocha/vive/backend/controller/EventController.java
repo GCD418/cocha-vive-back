@@ -25,7 +25,7 @@ public class EventController {
     }
 
     @PostMapping(value = "/events")
-    @PreAuthorize("hasAnyRole('USER')")
+    @PreAuthorize("hasAnyRole('PUBLISHER')")
     public ResponseEntity<Event> createEvent(@RequestPart("event") EventRequest dto, @RequestPart("images") List<MultipartFile> images) {
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.create(dto, images));
     }

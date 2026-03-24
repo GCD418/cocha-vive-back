@@ -2,6 +2,7 @@ package cocha.vive.backend.auth;
 
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.service.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         ) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
-        final String userEmail;
+        String userEmail = null;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -38,7 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
+
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+        } catch (ExpiredJwtException e) {
+            System.out.println("Expired Token Received");
+        } catch (Exception e) {
+            System.out.println("Invalid Token Received");
+        }
 
         if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             User user = this.userService.getByEmail(userEmail)
