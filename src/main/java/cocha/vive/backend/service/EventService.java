@@ -11,11 +11,14 @@ import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -24,13 +27,14 @@ public class EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final CloudinaryService cloudinaryService;
+    private final AuditService auditService;
 
     public List<Event> getAll(){
         return eventRepository.findAll();
     }
 
     public Event create(EventRequest dto, List<MultipartFile> images) {
-        User user = userRepository.findById(dto.getOrganizedByUserId())
+        User user = userRepository.findById(auditService.getActualUserId())
             .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         Category category = categoryRepository.findById(dto.getCategoryId())
@@ -76,7 +80,7 @@ public class EventService {
         if(!eventRepository.existsById(eventId)) {
             throw new ResourceNotFoundException("Not Found Event");
         }
-        int updated = eventRepository.updateStatus(eventId, newStatus, 1L);
+        int updated = eventRepository.updateStatus(eventId, newStatus, auditService.getActualUserId());
 
         if (updated == 0) {
             throw new EntityNotFoundException("Error updating Event Status");
@@ -87,5 +91,7 @@ public class EventService {
     public void cancelEvent(Long eventId) {
         updateStatus(eventId, EventStatus.CANCELLED);
     }
+
     public List<Event> getEventsByCategoryId(Long categoryId) { return eventRepository.findByCategoryId(categoryId); }
+
 }
