@@ -36,12 +36,6 @@ public class UserController {
         @ApiResponse(responseCode = "500", description = "Internal server error",
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
-
-    @GetMapping("/me")
-    public ResponseEntity<UserMeDTO> getCurrentUser() {
-        return ResponseEntity.ok(new UserMeDTO(userService.getActualUser()));
-    }
-
     @PutMapping("/complete-profile")
     public ResponseEntity<Void> completeProfile(@Valid @RequestBody CompleteProfileDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -49,5 +43,10 @@ public class UserController {
         userService.updateDocumentNumber(userEmail, dto.documentNumber(), dto.extension());
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserMeDTO> getCurrentUser() {
+        return ResponseEntity.ok(new UserMeDTO(userService.getActualUser()));
     }
 }
