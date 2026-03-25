@@ -39,14 +39,7 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserMeDTO> getCurrentUser() {
-        String email = SecurityContextHolder.getContext()
-                           .getAuthentication()
-                           .getName();
-
-        User user = userService.getByEmail(email)
-                        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        return ResponseEntity.ok(new UserMeDTO(user));
+        return ResponseEntity.ok(new UserMeDTO(userService.getActualUser()));
     }
 
     @PutMapping("/complete-profile")
