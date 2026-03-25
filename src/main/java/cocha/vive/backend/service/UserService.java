@@ -15,6 +15,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     public List<User> getAll() {
         return userRepository.findAll();
@@ -47,5 +48,9 @@ public class UserService {
         user.setDocumentExtension(extension);
 
         userRepository.save(user);
+    }
+
+    public User getActualUser() {
+        return auditService.getActualUser();
     }
 }

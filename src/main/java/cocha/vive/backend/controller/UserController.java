@@ -1,7 +1,9 @@
 package cocha.vive.backend.controller;
 
+import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.CompleteProfileDto;
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
+import cocha.vive.backend.model.dto.UserMeDTO;
 import cocha.vive.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,10 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/users")
@@ -44,5 +43,10 @@ public class UserController {
         userService.updateDocumentNumber(userEmail, dto.documentNumber(), dto.extension());
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserMeDTO> getCurrentUser() {
+        return ResponseEntity.ok(new UserMeDTO(userService.getActualUser()));
     }
 }

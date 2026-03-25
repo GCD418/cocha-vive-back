@@ -18,5 +18,5 @@ public class EventRequest {
     private LocalDateTime dateStart;
     private LocalDateTime dateEnd;
     private List<String> tags;
-    //private List<String> photoLinks;
+    private List<String> photoLinks;
 }
