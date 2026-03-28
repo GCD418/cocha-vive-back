@@ -10,6 +10,7 @@
 - [Tech Stack](#tech-stack)
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
+- [Testing and Coverage (JaCoCo)](#testing-and-coverage-jacoco)
 - [Environment Variables](#environment-variables)
   - [IntelliJ IDEA](#-intellij-idea)
   - [VS Code](#-vs-code)
@@ -97,6 +98,32 @@ mvn spring-boot:run
 ```
 
 The API will be available at `http://localhost:8080`.
+
+---
+
+## Testing and Coverage (JaCoCo)
+
+This project uses **JaCoCo** to generate code coverage from your tests.
+
+Run tests + generate coverage report:
+
+```bash
+./mvnw test
+```
+
+If you want the report even when some tests fail:
+
+```bash
+./mvnw -Dmaven.test.failure.ignore=true test
+```
+
+Generated coverage files:
+
+- HTML report: `target/site/jacoco/index.html`
+- XML report: `target/site/jacoco/jacoco.xml`
+- Exec data: `target/jacoco.exec`
+
+Open the HTML report in your browser to inspect package/class/line coverage.
 
 ---
 
