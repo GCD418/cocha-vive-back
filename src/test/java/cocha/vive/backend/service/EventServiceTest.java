@@ -227,4 +227,113 @@ class EventServiceTest {
         assertThrows(AccessDeniedException.class,
             () -> eventService.update(1L, new EventRequest(), List.of()));
     }
+    @Test
+    void shouldReturnUpcomingEvents() {
+        when(eventRepository.findActiveUpcoming())
+            .thenReturn(List.of(new Event(), new Event()));
+
+        List<Event> result = eventService.getUpcoming();
+
+        assertEquals(2, result.size());
+        verify(eventRepository).findActiveUpcoming();
+    }
+    @Test
+    void shouldReturnFeaturedEvents() {
+        when(eventRepository.findByIsActiveTrueAndIsFeaturedTrue())
+            .thenReturn(List.of(new Event()));
+
+        List<Event> result = eventService.getFeatured();
+
+        assertEquals(1, result.size());
+        verify(eventRepository).findByIsActiveTrueAndIsFeaturedTrue();
+    }
+    @Test
+    void shouldReturnEventsByCategoryId() {
+        when(eventRepository.findByCategoryId(1L))
+            .thenReturn(List.of(new Event()));
+
+        List<Event> result = eventService.getEventsByCategoryId(1L);
+
+        assertEquals(1, result.size());
+        verify(eventRepository).findByCategoryId(1L);
+    }
+    @Test
+    void shouldThrowWhenUpdatingWithInvalidCategory() {
+        User user = new User();
+        user.setId(1L);
+
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(user);
+
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(auth);
+
+        SecurityContextHolder.setContext(context);
+
+        Event event = new Event();
+        event.setOrganizedByUser(user);
+
+        EventRequest dto = new EventRequest();
+        dto.setCategoryId(99L);
+
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+        when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+            () -> eventService.update(1L, dto, List.of()));
+    }
+    @Test
+    void shouldMergeExistingAndNewImages() {
+        User user = new User();
+        user.setId(1L);
+
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(user);
+
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(auth);
+
+        SecurityContextHolder.setContext(context);
+
+        Event event = new Event();
+        event.setOrganizedByUser(user);
+        event.setPhotoLinks(List.of("old.jpg"));
+
+        EventRequest dto = new EventRequest();
+        dto.setPhotoLinks(List.of("existing.jpg"));
+
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+        when(cloudinaryService.uploadImages(any()))
+            .thenReturn(List.of("new.jpg"));
+        when(eventRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Event result = eventService.update(1L, dto,
+            List.of(mock(org.springframework.web.multipart.MultipartFile.class)));
+
+        assertEquals(2, result.getPhotoLinks().size());
+        verify(cloudinaryService).uploadImages(any());
+    }
+    @Test
+    void shouldSetModifiedByUserId() {
+        User user = new User();
+        user.setId(99L);
+
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(user);
+
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(auth);
+
+        SecurityContextHolder.setContext(context);
+
+        Event event = new Event();
+        event.setOrganizedByUser(user);
+
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+        when(eventRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Event result = eventService.update(1L, new EventRequest(), List.of());
+
+        assertEquals(99L, result.getModifiedByUserId());
+    }
 }
