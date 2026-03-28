@@ -7,6 +7,7 @@ import cocha.vive.backend.repository.CategoryRepository;
 import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
@@ -42,6 +44,11 @@ class EventServiceTest {
 
     @InjectMocks
     private EventService eventService;
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void shouldReturnAllEvents() {
@@ -173,9 +180,13 @@ class EventServiceTest {
         User currentUser = new User();
         currentUser.setId(10L);
 
-        Authentication auth = mock(Authentication.class);
-        when(auth.getPrincipal()).thenReturn(currentUser);
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(currentUser);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+
+        SecurityContextHolder.setContext(securityContext);
 
         Event event = new Event();
         event.setId(1L);
@@ -200,9 +211,13 @@ class EventServiceTest {
         User otherUser = new User();
         otherUser.setId(2L);
 
-        Authentication auth = mock(Authentication.class);
-        when(auth.getPrincipal()).thenReturn(otherUser);
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(otherUser);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+
+        SecurityContextHolder.setContext(securityContext);
 
         Event event = new Event();
         event.setOrganizedByUser(owner);

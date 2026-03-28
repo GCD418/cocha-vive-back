@@ -61,18 +61,14 @@ class UserServiceTest {
         dto.setName("Diego");
         dto.setFirstLastName("Rios");
 
-        User savedUser = User.builder()
-            .email(dto.getEmail())
-            .names(dto.getName())
-            .firstLastName(dto.getFirstLastName())
-            .build();
-
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(userRepository.save(any(User.class)))
+            .thenAnswer(i -> i.getArgument(0));
 
         User result = userService.create(dto);
 
         assertNotNull(result);
         assertEquals("test@mail.com", result.getEmail());
+        assertEquals("Diego", result.getNames());
 
         verify(userRepository).save(any(User.class));
     }
@@ -108,12 +104,14 @@ class UserServiceTest {
     @Test
     void shouldReturnActualUser() {
         User user = new User();
+        user.setId(99L);
 
         when(auditService.getActualUser()).thenReturn(user);
 
         User result = userService.getActualUser();
 
         assertNotNull(result);
+        assertEquals(99L, result.getId()); // 🔥 mejora clave
         verify(auditService).getActualUser();
     }
 }
