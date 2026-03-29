@@ -1,6 +1,8 @@
 spring:
   application:
     name: CochaVive
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DB_LINK}
     username: ${DB_USER}
