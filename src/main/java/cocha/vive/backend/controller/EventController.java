@@ -24,7 +24,7 @@ public class EventController {
         return eventService.getAll();
     }
 
-    @PostMapping(value = "/events")
+    @PostMapping(value = "/events", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('PUBLISHER')")
     public ResponseEntity<Event> createEvent(@RequestPart("event") EventRequest dto, @RequestPart("images") List<MultipartFile> images) {
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.create(dto, images));
