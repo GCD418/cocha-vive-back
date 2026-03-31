@@ -474,11 +474,11 @@ It lists every endpoint, their expected inputs, possible responses, and lets you
 
 ## Contact
 
-This project is developed by **CochaVive (Puy)**.
+This project is developed by **CochaVive**.
 
 For environment credentials (Cloudinary keys, shared DB access, etc.), reach out to the team:
 
-📧 **fourElements418@gmail.com**
+📧 **patosquare418@gmail.com**
 
 ---
 
