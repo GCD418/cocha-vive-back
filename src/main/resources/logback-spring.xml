@@ -43,6 +43,17 @@
     </encoder>
   </appender>
 
+  <appender name="FILE_USERS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/users-service.txt</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/users-service-%d{yyyy-MM-dd}.txt</fileNamePattern>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
   <logger name="cocha.vive.backend.service.EventService"
           level="DEBUG" additivity="false">
     <appender-ref ref="FILE_EVENTS"/>
@@ -52,6 +63,12 @@
   <logger name="cocha.vive.backend.service.CategoryService"
           level="DEBUG" additivity="false">
     <appender-ref ref="FILE_CATEGORIES"/>
+    <appender-ref ref="CONSOLE"/>
+  </logger>
+
+  <logger name="cocha.vive.backend.service.UserService"
+          level="DEBUG" additivity="false">
+    <appender-ref ref="FILE_USERS"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
 
