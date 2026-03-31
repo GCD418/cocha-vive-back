@@ -86,7 +86,10 @@ public class EventService {
     }
 
     public List<Event> getFeatured() {
-        return eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+        log.info("Retrieving featured events");
+        List<Event> events = eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+        log.info("Found {} featured events", events.size());
+        return events;
     }
 
     @Transactional
@@ -110,17 +113,27 @@ public class EventService {
         updateStatus(eventId, EventStatus.CANCELLED);
     }
 
-    public List<Event> getEventsByCategoryId(Long categoryId) { return eventRepository.findByCategoryId(categoryId); }
+    public List<Event> getEventsByCategoryId(Long categoryId) {
+        log.info("Retrieving events for category id: {}", categoryId);
+        List<Event> events = eventRepository.findByCategoryId(categoryId);
+        log.info("Found {} events for category id: {}", events.size(), categoryId);
+        return events;
+    }
 
     @Transactional
     public Event update(Long eventId, EventRequest dto, List<MultipartFile> images) {
+        log.info("Updating event with id: {}", eventId);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (User) authentication.getPrincipal();
 
         Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+            .orElseThrow(() -> {
+                log.warn("Event not found with id: {}", eventId);
+                return new ResourceNotFoundException("Event not found with id: " + eventId);
+            });
 
         if (!event.getOrganizedByUser().getId().equals(currentUser.getId())) {
+            log.warn("User id: {} attempted to edit event id: {} without permission", currentUser.getId(), eventId);
             throw new AccessDeniedException("You are not allowed to edit this event");
         }
 
@@ -158,6 +171,8 @@ public class EventService {
 
         event.setModifiedByUserId(currentUser.getId());
 
-        return eventRepository.save(event);
+        Event updatedEvent = eventRepository.save(event);
+        log.info("Event updated successfully with id: {}", updatedEvent.getId());
+        return updatedEvent;
     }
 }
