@@ -16,7 +16,7 @@ spring:
       max-request-size: 50MB
 
   jpa:
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
     hibernate:
       ddl-auto: update
     properties:
@@ -44,4 +44,4 @@ logging:
   level:
     cocha:
       vive:
-        backend: "DEBUG"
+        backend: ${APP_LOG_LEVEL:INFO}

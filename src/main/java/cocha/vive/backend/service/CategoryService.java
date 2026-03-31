@@ -17,37 +17,47 @@ import java.util.List;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final AuditService auditService;
+
     public List<Category> getAll(){
-        log.info("Retrieving all Categories");
-        return categoryRepository.findAll();
+        log.debug("Retrieving all categories");
+        List<Category> categories = categoryRepository.findAll();
+        log.debug("Retrieved {} categories", categories.size());
+        return categories;
     }
 
     public Category create(CategoryCreateDTO categoryCreateDTO){
-        return categoryRepository.save(Category.builder()
+        log.info("Creating category with name: {}", categoryCreateDTO.getName());
+        Category savedCategory = categoryRepository.save(Category.builder()
             .name(categoryCreateDTO.getName())
             .description(categoryCreateDTO.getDescription())
             .identifyingIcon(categoryCreateDTO.getIdentifyingIcon())
             .build());
+        log.info("Category created with id: {} and name: {}", savedCategory.getId(), savedCategory.getName());
+        return savedCategory;
     }
 
     public Category findByName(String name){
-        log.info("Searching for category with name: {}", name);
-        return categoryRepository.findByName(name)
+        log.debug("Searching for category with name: {}", name);
+        Category category = categoryRepository.findByName(name)
             .orElseThrow(() -> {
                 log.warn("Not found category with name: {}", name);
                 return new ResourceNotFoundException("There is no category with name: " + name);
             });
+        log.debug("Found category with id: {} and name: {}", category.getId(), category.getName());
+        return category;
     }
 
     @Transactional
     public void delete(Long id){
-        log.info("Soft deleting Category with id: {}", id);
+        Long actualUserId = auditService.getActualUserId();
+        log.info("Soft deleting category with id: {} by user id: {}", id, actualUserId);
         categoryRepository.findById(id)
             .orElseThrow(() -> {
                 log.warn("Not found category with id: {}", id);
                 return new ResourceNotFoundException("Not Found Category");
             });
-        categoryRepository.softDelete(id, auditService.getActualUserId());
+        categoryRepository.softDelete(id, actualUserId);
+        log.info("Category soft deleted with id: {}", id);
     }
 
 }
