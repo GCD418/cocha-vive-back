@@ -54,6 +54,50 @@
     </encoder>
   </appender>
 
+  <appender name="FILE_AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/audit-service.txt</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/audit-service-%d{yyyy-MM-dd}.txt</fileNamePattern>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE_CLOUDINARY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/cloudinary-service.txt</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/cloudinary-service-%d{yyyy-MM-dd}.txt</fileNamePattern>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE_JWT_SERVICE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/jwt-service.txt</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/jwt-service-%d{yyyy-MM-dd}.txt</fileNamePattern>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE_JWT_FILTER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/jwt-authentication-filter.txt</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/jwt-authentication-filter-%d{yyyy-MM-dd}.txt</fileNamePattern>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
   <logger name="cocha.vive.backend.service.EventService"
           level="DEBUG" additivity="false">
     <appender-ref ref="FILE_EVENTS"/>
@@ -69,6 +113,30 @@
   <logger name="cocha.vive.backend.service.UserService"
           level="DEBUG" additivity="false">
     <appender-ref ref="FILE_USERS"/>
+    <appender-ref ref="CONSOLE"/>
+  </logger>
+
+  <logger name="cocha.vive.backend.service.AuditService"
+          level="DEBUG" additivity="false">
+    <appender-ref ref="FILE_AUDIT"/>
+    <appender-ref ref="CONSOLE"/>
+  </logger>
+
+  <logger name="cocha.vive.backend.service.CloudinaryService"
+          level="DEBUG" additivity="false">
+    <appender-ref ref="FILE_CLOUDINARY"/>
+    <appender-ref ref="CONSOLE"/>
+  </logger>
+
+  <logger name="cocha.vive.backend.auth.JwtService"
+          level="DEBUG" additivity="false">
+    <appender-ref ref="FILE_JWT_SERVICE"/>
+    <appender-ref ref="CONSOLE"/>
+  </logger>
+
+  <logger name="cocha.vive.backend.auth.JwtAuthenticationFilter"
+          level="DEBUG" additivity="false">
+    <appender-ref ref="FILE_JWT_FILTER"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
 
