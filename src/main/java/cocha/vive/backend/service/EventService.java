@@ -11,6 +11,7 @@ import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EventService {
@@ -33,16 +35,22 @@ public class EventService {
     private final AuditService auditService;
 
     public List<Event> getAll(){
+        log.info("Retrieving all events");
         return eventRepository.findAll();
     }
 
     public Event create(EventRequest dto, List<MultipartFile> images) {
+        log.info("Creating event with title: {}", dto.getTitle());
         User user = userRepository.findById(auditService.getActualUserId())
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-
+            .orElseThrow(() -> {
+                log.warn("User not found with id: {}", auditService.getActualUserId());
+                return new ResourceNotFoundException("Usuario no encontrado");
+            });
         Category category = categoryRepository.findById(dto.getCategoryId())
-            .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
-
+            .orElseThrow(() -> {
+                log.warn("Category not found with id: {}", dto.getCategoryId());
+                return new ResourceNotFoundException("Categoría no encontrada");
+            });
         Event event = Event.builder()
             .title(dto.getTitle())
             .shortDescription(dto.getShortDescription())
@@ -62,7 +70,10 @@ public class EventService {
             .isActive(true)
             .build();
 
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        log.info("Event created with id: {}", savedEvent.getId());
+
+        return savedEvent;
     }
 
     public Event findById(Long id) {
@@ -80,14 +91,18 @@ public class EventService {
 
     @Transactional
     public void updateStatus(Long eventId, EventStatus newStatus) {
+        log.info("Updating status for event id: {} to {}", eventId, newStatus);
         if(!eventRepository.existsById(eventId)) {
+            log.warn("Event not found with id: {}", eventId);
             throw new ResourceNotFoundException("Not Found Event");
         }
         int updated = eventRepository.updateStatus(eventId, newStatus, auditService.getActualUserId());
 
         if (updated == 0) {
+            log.warn("Failed to update status for event id: {}", eventId);
             throw new EntityNotFoundException("Error updating Event Status");
         }
+        log.info("Event status updated successfully for id: {}", eventId);
     }
 
     @Transactional
