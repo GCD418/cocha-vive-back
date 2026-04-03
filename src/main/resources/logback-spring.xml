@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+  <springProperty scope="context"
+                  name="SERVICE_LOG_LEVEL"
+                  source="logging.level.cocha.vive.backend"
+                  defaultValue="INFO"/>
+
   <property name="LOG_PATTERN"
             value="%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"/>
 
@@ -99,43 +104,43 @@
   </appender>
 
   <logger name="cocha.vive.backend.service.EventService"
-          level="DEBUG" additivity="false">
+      level="${SERVICE_LOG_LEVEL}" additivity="false">
     <appender-ref ref="FILE_EVENTS"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
 
   <logger name="cocha.vive.backend.service.CategoryService"
-          level="DEBUG" additivity="false">
+      level="${SERVICE_LOG_LEVEL}" additivity="false">
     <appender-ref ref="FILE_CATEGORIES"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
 
   <logger name="cocha.vive.backend.service.UserService"
-          level="DEBUG" additivity="false">
+      level="${SERVICE_LOG_LEVEL}" additivity="false">
     <appender-ref ref="FILE_USERS"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
 
   <logger name="cocha.vive.backend.service.AuditService"
-          level="DEBUG" additivity="false">
+      level="${SERVICE_LOG_LEVEL}" additivity="false">
     <appender-ref ref="FILE_AUDIT"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
 
   <logger name="cocha.vive.backend.service.CloudinaryService"
-          level="DEBUG" additivity="false">
+      level="${SERVICE_LOG_LEVEL}" additivity="false">
     <appender-ref ref="FILE_CLOUDINARY"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
 
   <logger name="cocha.vive.backend.auth.JwtService"
-          level="DEBUG" additivity="false">
+      level="${SERVICE_LOG_LEVEL}" additivity="false">
     <appender-ref ref="FILE_JWT_SERVICE"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
 
   <logger name="cocha.vive.backend.auth.JwtAuthenticationFilter"
-          level="DEBUG" additivity="false">
+      level="${SERVICE_LOG_LEVEL}" additivity="false">
     <appender-ref ref="FILE_JWT_FILTER"/>
     <appender-ref ref="CONSOLE"/>
   </logger>
