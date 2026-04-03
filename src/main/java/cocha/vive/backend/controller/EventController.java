@@ -1,5 +1,6 @@
 package cocha.vive.backend.controller;
 
+import cocha.vive.backend.core.annotations.FeatureFlag;
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.dto.EventRequest;
 import cocha.vive.backend.service.EventService;
@@ -36,11 +37,13 @@ public class EventController {
     }
 
     @GetMapping("/events/upcoming")
+    @FeatureFlag("view-upcoming-events")
     public List<Event> getUpcomingEvents(){
         return eventService.getUpcoming();
     }
 
     @GetMapping("/events/featured")
+    @FeatureFlag("view-featured-events")
     public List<Event> getFeaturedEvents(){
         return eventService.getFeatured();
     }
