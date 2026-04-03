@@ -20,6 +20,11 @@
   - [Testing With OAuth Playground + HTTP Client](#testing-with-oauth-playground--http-client)
   - [Role Convention (Important)](#role-convention-important)
   - [How Endpoint Restrictions Work](#how-endpoint-restrictions-work)
+- [Logging](#logging)
+  - [Where Logs Are Stored](#where-logs-are-stored)
+  - [Log Levels and What They Mean](#log-levels-and-what-they-mean)
+  - [Switching Between INFO and DEBUG](#switching-between-info-and-debug)
+  - [How to Read Logs Quickly](#how-to-read-logs-quickly)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
 - [Contact](#contact)
@@ -142,6 +147,7 @@ The app reads its sensitive configuration from environment variables — no hard
 | `JWT_SECRET_KEY` | Base64-encoded secret used to sign JWT tokens |
 | `JWT_EXPIRATION_TIME` | JWT lifetime in milliseconds (example: `86400000` for 24h) |
 | `GOOGLE_CLIENT_ID` | OAuth Client ID used to verify Google ID tokens |
+| `APP_LOG_LEVEL` *(optional)* | App logger verbosity for backend services (`INFO` by default, use `DEBUG` for troubleshooting) |
 
 > **Where do I get the shared credentials (Cloudinary, JWT secret policy, team DB, etc.)?**
 > Contact the **CochaVive (Puy)** team. See [Contact](#contact) below.
@@ -165,6 +171,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 JWT_SECRET_KEY=your_base64_secret
 JWT_EXPIRATION_TIME=86400000
 GOOGLE_CLIENT_ID=your_google_client_id
+APP_LOG_LEVEL=INFO
 ```
 
 5. Click **OK** and run. Done.
@@ -198,7 +205,8 @@ Create or edit `.vscode/launch.json` in the project root:
         "CLOUDINARY_API_SECRET": "your_api_secret",
         "JWT_SECRET_KEY": "your_base64_secret",
         "JWT_EXPIRATION_TIME": "86400000",
-        "GOOGLE_CLIENT_ID": "your_google_client_id"
+        "GOOGLE_CLIENT_ID": "your_google_client_id",
+        "APP_LOG_LEVEL": "INFO"
       }
     }
   ]
@@ -223,6 +231,7 @@ export CLOUDINARY_API_SECRET=your_api_secret
 export JWT_SECRET_KEY=your_base64_secret
 export JWT_EXPIRATION_TIME=86400000
 export GOOGLE_CLIENT_ID=your_google_client_id
+export APP_LOG_LEVEL=INFO
 
 ./mvnw spring-boot:run
 ```
@@ -239,6 +248,7 @@ CLOUDINARY_API_SECRET=your_api_secret \
 JWT_SECRET_KEY=your_base64_secret \
 JWT_EXPIRATION_TIME=86400000 \
 GOOGLE_CLIENT_ID=your_google_client_id \
+APP_LOG_LEVEL=INFO \
 ./mvnw spring-boot:run
 ```
 
@@ -254,6 +264,7 @@ set CLOUDINARY_API_SECRET=your_api_secret
 set JWT_SECRET_KEY=your_base64_secret
 set JWT_EXPIRATION_TIME=86400000
 set GOOGLE_CLIENT_ID=your_google_client_id
+set APP_LOG_LEVEL=INFO
 mvnw.cmd spring-boot:run
 ```
 
@@ -387,6 +398,109 @@ Quick example:
 @PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<?> createReport() { ... }
 ```
+
+---
+
+## Logging
+
+The backend uses **SLF4J + Logback** with dedicated service loggers. Every core service (events, categories, users, audit, cloudinary, JWT) writes to its own file and to console.
+
+The log level for backend classes is controlled from one place:
+
+- `logging.level.cocha.vive.backend: ${APP_LOG_LEVEL:INFO}` in `application.yaml`
+
+That means:
+
+- If `APP_LOG_LEVEL` is not set, level is `INFO`.
+- If you set `APP_LOG_LEVEL=DEBUG`, you get detailed diagnostic logs from backend packages.
+
+### Where Logs Are Stored
+
+All logs are written under the project `logs/` directory.
+
+- `logs/cochavive.txt`: all application logs (root appender)
+- `logs/events-service.txt`: `EventService`
+- `logs/categories-service.txt`: `CategoryService`
+- `logs/users-service.txt`: `UserService`
+- `logs/audit-service.txt`: `AuditService`
+- `logs/cloudinary-service.txt`: `CloudinaryService`
+- `logs/jwt-service.txt`: `JwtService`
+- `logs/jwt-authentication-filter.txt`: `JwtAuthenticationFilter`
+
+Rotation policy:
+
+- Daily rolling files (`*-yyyy-MM-dd.txt`)
+- `maxHistory=30` (keeps ~30 days)
+
+### Log Levels and What They Mean
+
+- `TRACE`: extremely detailed internals. Usually too noisy for day-to-day.
+- `DEBUG`: developer diagnostics (queries, branch decisions, token flow steps).
+- `INFO`: important business milestones (create/update/delete succeeded).
+- `WARN`: suspicious or recoverable issues (not found, invalid token, unauthorized action attempt).
+- `ERROR`: operation failed and requires attention.
+
+Current style used in services/auth:
+
+- `INFO` for successful business actions (for example, event/category/user created or updated).
+- `DEBUG` for detailed flow information.
+- `WARN` when something expected is missing or invalid.
+- `ERROR` for hard failures (for example, image upload exception).
+
+### Switching Between INFO and DEBUG
+
+Recommended workflow:
+
+1. Keep `APP_LOG_LEVEL=INFO` for normal local development and demos.
+2. Temporarily switch to `APP_LOG_LEVEL=DEBUG` when debugging a specific issue.
+3. Switch back to `INFO` once resolved.
+
+Why this matters:
+
+- `INFO` keeps logs readable and focused on system behavior.
+- `DEBUG` gives much more context but can generate a lot of noise.
+- Staying in `DEBUG` all the time makes real issues harder to spot.
+
+Quick toggle examples:
+
+```bash
+# Linux/macOS current shell
+export APP_LOG_LEVEL=DEBUG
+./mvnw spring-boot:run
+
+# Back to normal
+export APP_LOG_LEVEL=INFO
+./mvnw spring-boot:run
+```
+
+```cmd
+:: Windows CMD
+set APP_LOG_LEVEL=DEBUG
+mvnw.cmd spring-boot:run
+
+set APP_LOG_LEVEL=INFO
+mvnw.cmd spring-boot:run
+```
+
+### How to Read Logs Quickly
+
+Useful commands while troubleshooting:
+
+```bash
+# Follow all app logs in real time
+tail -f logs/cochavive.txt
+
+# Follow only JWT authentication flow
+tail -f logs/jwt-authentication-filter.txt
+
+# Follow only event service behavior
+tail -f logs/events-service.txt
+
+# Search warnings/errors in all logs
+rg -n "WARN|ERROR" logs/
+```
+
+Tip: If you are debugging authentication, start with `jwt-authentication-filter.txt` + `jwt-service.txt`. If you are debugging business behavior, go directly to the specific service file.
 
 ---
 
