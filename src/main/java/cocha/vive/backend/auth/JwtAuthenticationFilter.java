@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
@@ -34,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String userEmail = null;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.debug("No Bearer token found for request: {} {}", request.getMethod(), request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
@@ -43,14 +46,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (ExpiredJwtException e) {
-            System.out.println("Expired Token Received");
+            log.warn("Expired JWT received for request: {} {}", request.getMethod(), request.getRequestURI());
         } catch (Exception e) {
-            System.out.println("Invalid Token Received");
+            log.warn("Invalid JWT received for request: {} {} ({})",
+                request.getMethod(),
+                request.getRequestURI(),
+                e.getClass().getSimpleName());
         }
 
         if(userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            final String tokenEmail = userEmail;
             User user = this.userService.getByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Token doesn't belong to a registered user"));
+                .orElseThrow(() -> {
+                    log.warn("JWT email does not belong to a registered user: {}", tokenEmail);
+                    return new RuntimeException("Token doesn't belong to a registered user");
+                });
 
             if (jwtService.isTokenValid(jwt, user)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -62,7 +72,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                log.debug("JWT authenticated user id: {} for request: {} {}",
+                    user.getId(),
+                    request.getMethod(),
+                    request.getRequestURI());
+            } else {
+                log.warn("JWT validation failed for user email: {} on request: {} {}",
+                    userEmail,
+                    request.getMethod(),
+                    request.getRequestURI());
             }
+        } else if (userEmail != null) {
+            log.debug("Security context already has authentication for request: {} {}",
+                request.getMethod(),
+                request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);

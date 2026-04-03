@@ -16,7 +16,7 @@ spring:
       max-request-size: 50MB
 
   jpa:
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
     hibernate:
       ddl-auto: update
     properties:
@@ -39,3 +39,9 @@ spring:
         registration:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
+
+logging:
+  level:
+    cocha:
+      vive:
+        backend: ${APP_LOG_LEVEL:INFO}

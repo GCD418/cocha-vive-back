@@ -11,18 +11,17 @@ import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
-import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EventService {
@@ -33,16 +32,25 @@ public class EventService {
     private final AuditService auditService;
 
     public List<Event> getAll(){
-        return eventRepository.findAll();
+        log.debug("Retrieving all events");
+        List<Event> events = eventRepository.findAll();
+        log.debug("Retrieved {} events", events.size());
+        return events;
     }
 
     public Event create(EventRequest dto, List<MultipartFile> images) {
-        User user = userRepository.findById(auditService.getActualUserId())
-            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-
+        log.info("Creating event with title: {}", dto.getTitle());
+        Long actualUserId = auditService.getActualUserId();
+        User user = userRepository.findById(actualUserId)
+            .orElseThrow(() -> {
+                log.warn("User not found with id: {}", actualUserId);
+                return new ResourceNotFoundException("Usuario no encontrado");
+            });
         Category category = categoryRepository.findById(dto.getCategoryId())
-            .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
-
+            .orElseThrow(() -> {
+                log.warn("Category not found with id: {}", dto.getCategoryId());
+                return new ResourceNotFoundException("Categoría no encontrada");
+            });
         Event event = Event.builder()
             .title(dto.getTitle())
             .shortDescription(dto.getShortDescription())
@@ -62,50 +70,80 @@ public class EventService {
             .isActive(true)
             .build();
 
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        log.info("Event created with id: {}", savedEvent.getId());
+
+        return savedEvent;
     }
 
     public Event findById(Long id) {
-        return eventRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Event not exists with id: " + id));
+        log.debug("Searching event with id: {}", id);
+        Event event = eventRepository.findById(id)
+            .orElseThrow(() -> {
+                log.warn("Event not found with id: {}", id);
+                return new ResourceNotFoundException("Event not exists with id: " + id);
+            });
+        log.debug("Found event with id: {}", event.getId());
+        return event;
     }
 
     public List<Event> getUpcoming() {
-        return eventRepository.findActiveUpcoming();
+        log.debug("Retrieving upcoming events");
+        List<Event> events = eventRepository.findActiveUpcoming();
+        log.debug("Retrieved {} upcoming events", events.size());
+        return events;
     }
 
     public List<Event> getFeatured() {
-        return eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+        log.debug("Retrieving featured events");
+        List<Event> events = eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+        log.debug("Found {} featured events", events.size());
+        return events;
     }
 
     @Transactional
     public void updateStatus(Long eventId, EventStatus newStatus) {
+        log.info("Updating status for event id: {} to {}", eventId, newStatus);
         if(!eventRepository.existsById(eventId)) {
+            log.warn("Event not found with id: {}", eventId);
             throw new ResourceNotFoundException("Not Found Event");
         }
         int updated = eventRepository.updateStatus(eventId, newStatus, auditService.getActualUserId());
 
         if (updated == 0) {
+            log.warn("Failed to update status for event id: {}", eventId);
             throw new EntityNotFoundException("Error updating Event Status");
         }
+        log.info("Event status updated successfully for id: {}", eventId);
     }
 
     @Transactional
     public void cancelEvent(Long eventId) {
+        log.info("Cancelling event with id: {}", eventId);
         updateStatus(eventId, EventStatus.CANCELLED);
     }
 
-    public List<Event> getEventsByCategoryId(Long categoryId) { return eventRepository.findByCategoryId(categoryId); }
+    public List<Event> getEventsByCategoryId(Long categoryId) {
+        log.debug("Retrieving events for category id: {}", categoryId);
+        List<Event> events = eventRepository.findByCategoryId(categoryId);
+        log.debug("Found {} events for category id: {}", events.size(), categoryId);
+        return events;
+    }
 
     @Transactional
     public Event update(Long eventId, EventRequest dto, List<MultipartFile> images) {
+        log.info("Updating event with id: {}", eventId);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (User) authentication.getPrincipal();
 
         Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+            .orElseThrow(() -> {
+                log.warn("Event not found with id: {}", eventId);
+                return new ResourceNotFoundException("Event not found with id: " + eventId);
+            });
 
         if (!event.getOrganizedByUser().getId().equals(currentUser.getId())) {
+            log.warn("User id: {} attempted to edit event id: {} without permission", currentUser.getId(), eventId);
             throw new AccessDeniedException("You are not allowed to edit this event");
         }
 
@@ -123,7 +161,10 @@ public class EventService {
 
         if (dto.getCategoryId() != null) {
             Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+                .orElseThrow(() -> {
+                    log.warn("Category not found with id: {}", dto.getCategoryId());
+                    return new ResourceNotFoundException("Category not found");
+                });
             event.setCategory(category);
         }
 
@@ -143,6 +184,8 @@ public class EventService {
 
         event.setModifiedByUserId(currentUser.getId());
 
-        return eventRepository.save(event);
+        Event updatedEvent = eventRepository.save(event);
+        log.info("Event updated successfully with id: {}", updatedEvent.getId());
+        return updatedEvent;
     }
 }
