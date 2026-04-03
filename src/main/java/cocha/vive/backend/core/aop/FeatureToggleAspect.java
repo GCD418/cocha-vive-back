@@ -24,7 +24,7 @@ public class FeatureToggleAspect {
     @Around("@annotation(featureFlag)")
     public Object checkFeatureFlag(ProceedingJoinPoint pjp, FeatureFlag featureFlag)
         throws Throwable {
-        String flagName = featureFlag.value();
+        String flagName = featureFlag.value().getUnleashKey();
 
         if(!featureToggleService.isEnabled(flagName)) {
             log.info("Blocked access by flag {} to userId = {}", flagName, resolveUserId());
