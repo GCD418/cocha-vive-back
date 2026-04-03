@@ -12,17 +12,14 @@ import cocha.vive.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Service
@@ -35,15 +32,18 @@ public class EventService {
     private final AuditService auditService;
 
     public List<Event> getAll(){
-        log.info("Retrieving all events");
-        return eventRepository.findAll();
+        log.debug("Retrieving all events");
+        List<Event> events = eventRepository.findAll();
+        log.debug("Retrieved {} events", events.size());
+        return events;
     }
 
     public Event create(EventRequest dto, List<MultipartFile> images) {
         log.info("Creating event with title: {}", dto.getTitle());
-        User user = userRepository.findById(auditService.getActualUserId())
+        Long actualUserId = auditService.getActualUserId();
+        User user = userRepository.findById(actualUserId)
             .orElseThrow(() -> {
-                log.warn("User not found with id: {}", auditService.getActualUserId());
+                log.warn("User not found with id: {}", actualUserId);
                 return new ResourceNotFoundException("Usuario no encontrado");
             });
         Category category = categoryRepository.findById(dto.getCategoryId())
@@ -77,18 +77,27 @@ public class EventService {
     }
 
     public Event findById(Long id) {
-        return eventRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Event not exists with id: " + id));
+        log.debug("Searching event with id: {}", id);
+        Event event = eventRepository.findById(id)
+            .orElseThrow(() -> {
+                log.warn("Event not found with id: {}", id);
+                return new ResourceNotFoundException("Event not exists with id: " + id);
+            });
+        log.debug("Found event with id: {}", event.getId());
+        return event;
     }
 
     public List<Event> getUpcoming() {
-        return eventRepository.findActiveUpcoming();
+        log.debug("Retrieving upcoming events");
+        List<Event> events = eventRepository.findActiveUpcoming();
+        log.debug("Retrieved {} upcoming events", events.size());
+        return events;
     }
 
     public List<Event> getFeatured() {
-        log.info("Retrieving featured events");
+        log.debug("Retrieving featured events");
         List<Event> events = eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
-        log.info("Found {} featured events", events.size());
+        log.debug("Found {} featured events", events.size());
         return events;
     }
 
@@ -110,13 +119,14 @@ public class EventService {
 
     @Transactional
     public void cancelEvent(Long eventId) {
+        log.info("Cancelling event with id: {}", eventId);
         updateStatus(eventId, EventStatus.CANCELLED);
     }
 
     public List<Event> getEventsByCategoryId(Long categoryId) {
-        log.info("Retrieving events for category id: {}", categoryId);
+        log.debug("Retrieving events for category id: {}", categoryId);
         List<Event> events = eventRepository.findByCategoryId(categoryId);
-        log.info("Found {} events for category id: {}", events.size(), categoryId);
+        log.debug("Found {} events for category id: {}", events.size(), categoryId);
         return events;
     }
 
@@ -151,7 +161,10 @@ public class EventService {
 
         if (dto.getCategoryId() != null) {
             Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+                .orElseThrow(() -> {
+                    log.warn("Category not found with id: {}", dto.getCategoryId());
+                    return new ResourceNotFoundException("Category not found");
+                });
             event.setCategory(category);
         }
 
