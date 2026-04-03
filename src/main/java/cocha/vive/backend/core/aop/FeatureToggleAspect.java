@@ -2,8 +2,6 @@ package cocha.vive.backend.core.aop;
 
 import cocha.vive.backend.core.annotations.FeatureFlag;
 import cocha.vive.backend.exception.FeatureDisabledException;
-import cocha.vive.backend.exception.GlobalExceptionHandler;
-import cocha.vive.backend.service.AuditService;
 import cocha.vive.backend.service.FeatureToggleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
