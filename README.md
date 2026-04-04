@@ -25,6 +25,12 @@
   - [Log Levels and What They Mean](#log-levels-and-what-they-mean)
   - [Switching Between INFO and DEBUG](#switching-between-info-and-debug)
   - [How to Read Logs Quickly](#how-to-read-logs-quickly)
+- [Feature Flags (Unleash)](#feature-flags-unleash)
+  - [How It Works in This Backend](#how-it-works-in-this-backend)
+  - [Required Configuration](#required-configuration)
+  - [How to Add a New Feature Flag](#how-to-add-a-new-feature-flag)
+  - [Current Feature Flags](#current-feature-flags)
+  - [What Happens When a Flag Is OFF](#what-happens-when-a-flag-is-off)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
 - [Contact](#contact)
@@ -50,6 +56,7 @@ CochaVive is a platform for discovering and publishing public events in Cochabam
 | **JWT (JJWT)** | Stateless token generation and validation |
 | **Google API Client** | Verifies Google ID token on social login |
 | **Cloudinary** | Cloud image storage for event photos |
+| **Unleash** | Feature flag management (enable/disable features without redeploy) |
 | **SpringDoc OpenAPI (Swagger UI)** | Auto-generated interactive API docs |
 | **Spring DevTools** | Hot reload during development — saves your `Ctrl+C / mvn run` sanity |
 
@@ -148,6 +155,7 @@ The app reads its sensitive configuration from environment variables — no hard
 | `JWT_EXPIRATION_TIME` | JWT lifetime in milliseconds (example: `86400000` for 24h) |
 | `GOOGLE_CLIENT_ID` | OAuth Client ID used to verify Google ID tokens |
 | `APP_LOG_LEVEL` *(optional)* | App logger verbosity for backend services (`INFO` by default, use `DEBUG` for troubleshooting) |
+| `UNLEASH_API_TOKEN` | API token used by backend to fetch feature toggles from Unleash |
 
 > **Where do I get the shared credentials (Cloudinary, JWT secret policy, team DB, etc.)?**
 > Contact the **CochaVive (Puy)** team. See [Contact](#contact) below.
@@ -172,6 +180,7 @@ JWT_SECRET_KEY=your_base64_secret
 JWT_EXPIRATION_TIME=86400000
 GOOGLE_CLIENT_ID=your_google_client_id
 APP_LOG_LEVEL=INFO
+UNLEASH_API_TOKEN=your_unleash_api_token
 ```
 
 5. Click **OK** and run. Done.
@@ -206,7 +215,8 @@ Create or edit `.vscode/launch.json` in the project root:
         "JWT_SECRET_KEY": "your_base64_secret",
         "JWT_EXPIRATION_TIME": "86400000",
         "GOOGLE_CLIENT_ID": "your_google_client_id",
-        "APP_LOG_LEVEL": "INFO"
+        "APP_LOG_LEVEL": "INFO",
+        "UNLEASH_API_TOKEN": "your_unleash_api_token"
       }
     }
   ]
@@ -232,6 +242,7 @@ export JWT_SECRET_KEY=your_base64_secret
 export JWT_EXPIRATION_TIME=86400000
 export GOOGLE_CLIENT_ID=your_google_client_id
 export APP_LOG_LEVEL=INFO
+export UNLEASH_API_TOKEN=your_unleash_api_token
 
 ./mvnw spring-boot:run
 ```
@@ -249,6 +260,7 @@ JWT_SECRET_KEY=your_base64_secret \
 JWT_EXPIRATION_TIME=86400000 \
 GOOGLE_CLIENT_ID=your_google_client_id \
 APP_LOG_LEVEL=INFO \
+UNLEASH_API_TOKEN=your_unleash_api_token \
 ./mvnw spring-boot:run
 ```
 
@@ -265,6 +277,7 @@ set JWT_SECRET_KEY=your_base64_secret
 set JWT_EXPIRATION_TIME=86400000
 set GOOGLE_CLIENT_ID=your_google_client_id
 set APP_LOG_LEVEL=INFO
+set UNLEASH_API_TOKEN=your_unleash_api_token
 mvnw.cmd spring-boot:run
 ```
 
@@ -504,6 +517,92 @@ Tip: If you are debugging authentication, start with `jwt-authentication-filter.
 
 ---
 
+## Feature Flags (Unleash)
+
+This backend uses **Unleash** to turn features ON/OFF without redeploying. It is useful for gradual rollout, safe experimentation, and quickly disabling risky behavior in production.
+
+### How It Works in This Backend
+
+The current flow is:
+
+1. Feature keys are centralized in the `AppFeature` enum (often referred to by the team as `AppFeatures`).
+2. Endpoints are annotated with the custom `@FeatureFlag(AppFeature.XYZ)` annotation.
+3. `FeatureToggleAspect` (AOP) intercepts the request and checks the flag in Unleash.
+4. If enabled: request continues normally.
+5. If disabled: backend throws `FeatureDisabledException` and returns controlled error response.
+
+This keeps controller code clean and avoids repeating `if (flagEnabled)` checks in every endpoint.
+
+### Required Configuration
+
+Unleash client is configured in backend with:
+
+- `unleash.app-name`
+- `unleash.api-url`
+- `unleash.environment`
+- `UNLEASH_API_TOKEN` (from env var)
+
+Important for onboarding:
+
+- Ask **CochaVive** for `UNLEASH_API_TOKEN`.
+- The flag key in Unleash must match the key in `AppFeature` exactly.
+- Backend fetches toggles on startup and refreshes them periodically.
+
+### How to Add a New Feature Flag
+
+Use this checklist whenever you implement a new toggle:
+
+1. Create the toggle in Unleash dashboard.
+2. Add the flag to `AppFeature` enum with the exact key used in Unleash.
+3. Annotate endpoint (or class) with `@FeatureFlag(AppFeature.YOUR_FLAG)`.
+4. Test both states:
+  - Flag ON -> endpoint works.
+  - Flag OFF -> endpoint returns controlled disabled-feature response.
+
+Example:
+
+```java
+// AppFeature.java
+NEW_PUBLIC_SEARCH("new-public-search");
+
+// SomeController.java
+@GetMapping("/search")
+@FeatureFlag(AppFeature.NEW_PUBLIC_SEARCH)
+public ResponseEntity<?> search() { ... }
+```
+
+Rule of thumb:
+
+- Always add the enum entry first.
+- Never hardcode raw feature key strings directly in controllers.
+
+### Current Feature Flags
+
+The backend currently defines:
+
+- `VIEW_UPCOMING_EVENTS` -> `view-upcoming-events`
+- `VIEW_FEATURED_EVENTS` -> `view-featured-events`
+
+These are used in event endpoints:
+
+- `GET /api/events/upcoming`
+- `GET /api/events/featured`
+
+### What Happens When a Flag Is OFF
+
+When an endpoint is blocked by feature flag:
+
+- Access is denied by AOP before business logic runs.
+- Backend returns an error response from global exception handler.
+- A log entry is recorded with flag name and requester identity (if available).
+
+Practical effect for API consumers:
+
+- Feature behaves as not available while flag is disabled.
+- Existing code can stay deployed safely while rollout is controlled from Unleash.
+
+---
+
 ## Project Structure
 
 ```
@@ -514,7 +613,8 @@ src/main/java/cocha/vive/backend/
 ├── config/
 │   ├── SwaggerConfig.java          ← OpenAPI/Swagger UI setup and API metadata.
 │   ├── CloudinaryConfig.java       ← Cloudinary client configuration.
-│   └── CorsConfig.java             ← CORS setup shared by the API.
+│   ├── CorsConfig.java             ← CORS setup shared by the API.
+│   └── FeatureToggleConfig.java    ← Unleash client configuration.
 │
 ├── auth/
 │   ├── SecurityConfig.java         ← Security filter chain, CORS, URL-level access rules.
@@ -523,6 +623,14 @@ src/main/java/cocha/vive/backend/
 │   ├── AuthController.java         ← Google token login endpoint (`/api/auth/google`).
 │   ├── AuthResponse.java           ← Authentication response DTO.
 │   └── TokenDto.java               ← Incoming Google token payload.
+│
+├── core/
+│   ├── annotations/
+│   │   └── FeatureFlag.java        ← Custom annotation used to protect endpoints with toggles.
+│   ├── aop/
+│   │   └── FeatureToggleAspect.java← Intercepts `@FeatureFlag` and checks Unleash state.
+│   └── enums/
+│       └── AppFeature.java         ← Canonical list of app feature keys.
 │
 ├── controller/
 │   └── CategoryController.java     ← HTTP layer. Receives requests, returns responses.
