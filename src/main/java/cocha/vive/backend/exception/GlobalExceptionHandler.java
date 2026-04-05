@@ -22,6 +22,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(FeatureDisabledException.class)
+    public ResponseEntity<ErrorResponseDTO> handleFeatureDisabled(FeatureDisabledException ex) {
+        ErrorResponseDTO error = ErrorResponseDTO.builder()
+            .status(HttpStatus.NOT_FOUND.value())
+            .code("RESOURCE_SHOULD_NOT_BE_FOUNDED")
+            .message(ex.getMessage())
+            .timestamp(LocalDateTime.now())
+            .build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
