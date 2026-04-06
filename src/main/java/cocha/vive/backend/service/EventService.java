@@ -77,20 +77,20 @@ public class EventService {
     }
 
     public Event findById(Long id) {
-        log.debug("Searching event with id: {}", id);
+        log.info("Searching for event with ID: {}", id); // INFO: Inicio de acción normal
         Event event = eventRepository.findById(id)
             .orElseThrow(() -> {
-                log.warn("Event not found with id: {}", id);
+                log.warn("Event not found with ID: {}", id); // WARN: El error no rompe la app, solo no existe
                 return new ResourceNotFoundException("Event not exists with id: " + id);
             });
-        log.debug("Found event with id: {}", event.getId());
+        log.info("Successfully found event with ID: {}", event.getId()); // INFO: Fin de acción exitosa
         return event;
     }
 
     public List<Event> getUpcoming() {
-        log.debug("Retrieving upcoming events");
+        log.info("Retrieving upcoming events from database"); // INFO: Inicio
         List<Event> events = eventRepository.findActiveUpcoming();
-        log.debug("Retrieved {} upcoming events", events.size());
+        log.info("Successfully retrieved {} upcoming events", events.size()); // INFO: Resultado
         return events;
     }
 
@@ -119,8 +119,15 @@ public class EventService {
 
     @Transactional
     public void cancelEvent(Long eventId) {
-        log.info("Cancelling event with id: {}", eventId);
-        updateStatus(eventId, EventStatus.CANCELLED);
+        log.info("Attempting to cancel event with ID: {}", eventId); // INFO: Intento
+        try {
+            updateStatus(eventId, EventStatus.CANCELLED);
+            log.info("Event with ID: {} has been successfully cancelled", eventId); // INFO: Éxito
+        } catch (Exception e) {
+            // ERROR: Esto es para errores críticos (ej. se cayó la base de datos)
+            log.error("Critical error while cancelling event ID: {}", eventId, e);
+            throw e;
+        }
     }
 
     public List<Event> getEventsByCategoryId(Long categoryId) {
