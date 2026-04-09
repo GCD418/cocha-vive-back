@@ -30,9 +30,17 @@ public class PublisherRequestService {
 	private final UserRepository userRepository;
 
 	public List<PublisherRequest> getAll() {
-		log.debug("Retrieving all publisher requests");
-		List<PublisherRequest> requests = publisherRequestRepository.findAll();
-		log.debug("Retrieved {} publisher request(s)", requests.size());
+		log.debug("Retrieving all publisher requests ordered by createdAt ASC");
+		List<PublisherRequest> requests = publisherRequestRepository.findAllByOrderByCreatedAtAsc();
+		log.debug("Retrieved {} publisher request(s) ordered by createdAt ASC", requests.size());
+		return requests;
+	}
+
+	public List<PublisherRequest> getAllPending() {
+		log.debug("Retrieving pending publisher requests ordered by createdAt ASC");
+		List<PublisherRequest> requests = publisherRequestRepository
+			.findByRequestStatusOrderByCreatedAtAsc(RequestStatus.PENDING);
+		log.debug("Retrieved {} pending publisher request(s) ordered by createdAt ASC", requests.size());
 		return requests;
 	}
 

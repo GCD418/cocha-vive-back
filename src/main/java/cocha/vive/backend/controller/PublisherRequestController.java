@@ -22,9 +22,14 @@ public class PublisherRequestController {
 
     private final PublisherRequestService publisherRequestService;
 
-    @GetMapping
+    @GetMapping("/all")
     public List<PublisherRequest> getAllRequests() {
         return publisherRequestService.getAll();
+    }
+
+    @GetMapping("/pending")
+    public List<PublisherRequest> getPendingRequests() {
+        return publisherRequestService.getAllPending();
     }
 
     @GetMapping("/{id}")
