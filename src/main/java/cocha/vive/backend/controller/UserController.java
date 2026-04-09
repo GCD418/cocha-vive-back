@@ -41,7 +41,7 @@ public class UserController {
     public ResponseEntity<Void> completeProfile(@Valid @RequestBody CompleteProfileDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-        userService.updateDocumentNumber(userEmail, dto.documentNumber(), dto.extension());
+        userService.updateDocumentNumber(userEmail, dto.documentNumber(), dto.documentExtension());
 
         return ResponseEntity.ok().build();
     }
