@@ -1,9 +1,9 @@
 package cocha.vive.backend.controller;
 
-import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.CompleteProfileDto;
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
 import cocha.vive.backend.model.dto.UserMeDTO;
+import cocha.vive.backend.model.mapper.UserMapper;
 import cocha.vive.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "User", description = "User profile operations")
 public class UserController {
     private final UserService userService;
+    private final UserMapper userMapper;
 
     @Operation(summary = "Complete current user's profile")
     @ApiResponses({
@@ -40,13 +41,13 @@ public class UserController {
     public ResponseEntity<Void> completeProfile(@Valid @RequestBody CompleteProfileDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = authentication.getName();
-        userService.updateDocumentNumber(userEmail, dto.documentNumber(), dto.extension());
+        userService.updateDocumentNumber(userEmail, dto.documentNumber(), dto.documentExtension());
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserMeDTO> getCurrentUser() {
-        return ResponseEntity.ok(new UserMeDTO(userService.getActualUser()));
+        return ResponseEntity.ok(userMapper.toMeDto(userService.getActualUser()));
     }
 }

@@ -2,6 +2,7 @@ package cocha.vive.backend.service;
 
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.UserCreateDTO;
+import cocha.vive.backend.model.mapper.UserMapper;
 import cocha.vive.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final UserMapper userMapper;
 
     public List<User> getAll() {
         log.debug("Retrieving all users");
@@ -41,16 +43,7 @@ public class UserService {
     @Transactional
     public User create(UserCreateDTO newUser) {
         log.info("Creating user with email: {}", newUser.getEmail());
-        User savedUser = userRepository.save(User.builder()
-            .email(newUser.getEmail())
-            .names(newUser.getName())
-            .firstLastName(newUser.getFirstLastName())
-            .documentNumber(newUser.getDocumentNumber())
-            .photoUrl(newUser.getPhotoUrl())
-            .role(newUser.getRole())
-            .googleProviderId(newUser.getGoogleProviderId())
-            .build()
-        );
+        User savedUser = userRepository.save(userMapper.toEntity(newUser));
         log.info("User created with id: {} and email: {}", savedUser.getId(), savedUser.getEmail());
         return savedUser;
     }

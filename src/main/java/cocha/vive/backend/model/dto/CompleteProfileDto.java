@@ -12,9 +12,8 @@ public record CompleteProfileDto(
 	@Schema(description = "Document number of the user", example = "8349271")
 	String documentNumber,
 
-	@NotBlank
 	@Pattern(regexp = "^[0-9A-Z]{2}$")
 	@Schema(description = "Two-letter document extension in some duplicated document numbers", example = "1H")
-	String extension
+	String documentExtension
 ) {
 }

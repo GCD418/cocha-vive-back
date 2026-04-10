@@ -3,6 +3,7 @@ package cocha.vive.backend.service;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.Category;
 import cocha.vive.backend.model.dto.CategoryCreateDTO;
+import cocha.vive.backend.model.mapper.CategoryMapper;
 import cocha.vive.backend.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import java.util.List;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final AuditService auditService;
+    private final CategoryMapper categoryMapper;
 
     public List<Category> getAll(){
         log.debug("Retrieving all categories");
@@ -27,11 +29,7 @@ public class CategoryService {
 
     public Category create(CategoryCreateDTO categoryCreateDTO){
         log.info("Creating category with name: {}", categoryCreateDTO.getName());
-        Category savedCategory = categoryRepository.save(Category.builder()
-            .name(categoryCreateDTO.getName())
-            .description(categoryCreateDTO.getDescription())
-            .identifyingIcon(categoryCreateDTO.getIdentifyingIcon())
-            .build());
+        Category savedCategory = categoryRepository.save(categoryMapper.toEntity(categoryCreateDTO));
         log.info("Category created with id: {} and name: {}", savedCategory.getId(), savedCategory.getName());
         return savedCategory;
     }

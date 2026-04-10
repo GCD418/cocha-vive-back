@@ -6,6 +6,7 @@ import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.EventStatus;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.EventRequest;
+import cocha.vive.backend.model.mapper.EventMapper;
 import cocha.vive.backend.repository.CategoryRepository;
 import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
@@ -30,6 +31,7 @@ public class EventService {
     private final CategoryRepository categoryRepository;
     private final CloudinaryService cloudinaryService;
     private final AuditService auditService;
+    private final EventMapper eventMapper;
 
     public List<Event> getAll(){
         log.debug("Retrieving all events");
@@ -51,24 +53,8 @@ public class EventService {
                 log.warn("Category not found with id: {}", dto.getCategoryId());
                 return new ResourceNotFoundException("Categoría no encontrada");
             });
-        Event event = Event.builder()
-            .title(dto.getTitle())
-            .shortDescription(dto.getShortDescription())
-            .description(dto.getDescription())
-            .cost(dto.getCost())
-            .category(category)
-            .organizedByUser(user)
-            .latitude(dto.getLatitude())
-            .longitude(dto.getLongitude())
-            .shortPlaceDescription(dto.getShortPlaceDescription())
-            .peopleCapacity(dto.getPeopleCapacity())
-            .dateStart(dto.getDateStart())
-            .dateEnd(dto.getDateEnd())
-            .tags(dto.getTags())
-            .photoLinks(cloudinaryService.uploadImages(images))
-            .eventStatus(EventStatus.APPROVED)
-            .isActive(true)
-            .build();
+
+        Event event = eventMapper.toEntity(dto, category, user, cloudinaryService.uploadImages(images));
 
         Event savedEvent = eventRepository.save(event);
         log.info("Event created with id: {}", savedEvent.getId());
@@ -147,17 +133,7 @@ public class EventService {
             throw new AccessDeniedException("You are not allowed to edit this event");
         }
 
-        if (dto.getTitle() != null)                 event.setTitle(dto.getTitle());
-        if (dto.getShortDescription() != null)      event.setShortDescription(dto.getShortDescription());
-        if (dto.getDescription() != null)           event.setDescription(dto.getDescription());
-        if (dto.getCost() != null)                  event.setCost(dto.getCost());
-        if (dto.getLatitude() != null)              event.setLatitude(dto.getLatitude());
-        if (dto.getLongitude() != null)             event.setLongitude(dto.getLongitude());
-        if (dto.getShortPlaceDescription() != null) event.setShortPlaceDescription(dto.getShortPlaceDescription());
-        if (dto.getPeopleCapacity() != null)        event.setPeopleCapacity(dto.getPeopleCapacity());
-        if (dto.getDateStart() != null)             event.setDateStart(dto.getDateStart());
-        if (dto.getDateEnd() != null)               event.setDateEnd(dto.getDateEnd());
-        if (dto.getTags() != null)                  event.setTags(dto.getTags());
+        eventMapper.updateEventFromRequest(dto, event);
 
         if (dto.getCategoryId() != null) {
             Category category = categoryRepository.findById(dto.getCategoryId())
