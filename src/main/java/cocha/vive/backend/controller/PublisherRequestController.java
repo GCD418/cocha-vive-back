@@ -1,5 +1,7 @@
 package cocha.vive.backend.controller;
 
+import cocha.vive.backend.core.annotations.FeatureFlag;
+import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.dto.PublisherRequestCreateDTO;
 import cocha.vive.backend.model.dto.PublisherRequestResponseDTO;
 import cocha.vive.backend.service.PublisherRequestService;
@@ -22,21 +24,25 @@ public class PublisherRequestController {
 
     private final PublisherRequestService publisherRequestService;
 
+    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/all")
     public List<PublisherRequestResponseDTO> getAllRequests() {
         return publisherRequestService.getAll();
     }
 
+    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/pending")
     public List<PublisherRequestResponseDTO> getPendingRequests() {
         return publisherRequestService.getAllPending();
     }
 
+    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/{id}")
     public ResponseEntity<PublisherRequestResponseDTO> getRequestById(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.getById(id));
     }
 
+    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PublisherRequestResponseDTO> createRequest(
         @Valid @RequestPart("request") PublisherRequestCreateDTO dto,
@@ -44,11 +50,13 @@ public class PublisherRequestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(publisherRequestService.createRequest(dto, images));
     }
 
+    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PatchMapping("/{id}/approve")
     public ResponseEntity<PublisherRequestResponseDTO> approveRequest(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.approveRequest(id));
     }
 
+    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PatchMapping("/{id}/reject")
     public ResponseEntity<PublisherRequestResponseDTO> rejectRequest(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.rejectRequest(id));
