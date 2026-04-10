@@ -97,7 +97,7 @@ public class EventService {
 
     public List<Event> getFeatured() {
         log.debug("Retrieving featured events");
-        List<Event> events = eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+        List<Event> events = eventRepository.findActiveFeatured();
         log.debug("Found {} featured events", events.size());
         return events;
     }
