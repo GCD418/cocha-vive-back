@@ -23,7 +23,19 @@ public class EventController {
 
     @GetMapping("/events")
     public List<Event> getAllEvents(){
-        return eventService.getAll();
+        return eventService.getAllPublic();
+    }
+
+    @GetMapping("/events/my-events")
+    @PreAuthorize("hasRole('PUBLISHER')")
+    public List<Event> getMyEvents() {
+        return eventService.getMyEvents();
+    }
+
+    @GetMapping("/events/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Event> getAllEventsForAdmin() {
+        return eventService.getAllForAdmin();
     }
 
     @PostMapping(value = "/events", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
