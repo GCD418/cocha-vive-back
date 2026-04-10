@@ -1,7 +1,7 @@
 package cocha.vive.backend.controller;
 
-import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.dto.PublisherRequestCreateDTO;
+import cocha.vive.backend.model.dto.PublisherRequestResponseDTO;
 import cocha.vive.backend.service.PublisherRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,34 +23,34 @@ public class PublisherRequestController {
     private final PublisherRequestService publisherRequestService;
 
     @GetMapping("/all")
-    public List<PublisherRequest> getAllRequests() {
+    public List<PublisherRequestResponseDTO> getAllRequests() {
         return publisherRequestService.getAll();
     }
 
     @GetMapping("/pending")
-    public List<PublisherRequest> getPendingRequests() {
+    public List<PublisherRequestResponseDTO> getPendingRequests() {
         return publisherRequestService.getAllPending();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PublisherRequest> getRequestById(@PathVariable Long id) {
+    public ResponseEntity<PublisherRequestResponseDTO> getRequestById(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.getById(id));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<PublisherRequest> createRequest(
+    public ResponseEntity<PublisherRequestResponseDTO> createRequest(
         @Valid @RequestPart("request") PublisherRequestCreateDTO dto,
         @RequestPart("images") List<MultipartFile> images) {
         return ResponseEntity.status(HttpStatus.CREATED).body(publisherRequestService.createRequest(dto, images));
     }
 
     @PatchMapping("/{id}/approve")
-    public ResponseEntity<PublisherRequest> approveRequest(@PathVariable Long id) {
+    public ResponseEntity<PublisherRequestResponseDTO> approveRequest(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.approveRequest(id));
     }
 
     @PatchMapping("/{id}/reject")
-    public ResponseEntity<PublisherRequest> rejectRequest(@PathVariable Long id) {
+    public ResponseEntity<PublisherRequestResponseDTO> rejectRequest(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.rejectRequest(id));
     }
 }

@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "publisher-request")
+@Table(name = "publisher_requests")
 @SQLRestriction("is_active = true")
 @Data
 @NoArgsConstructor
@@ -36,8 +36,9 @@ public class PublisherRequest {
     @Column(name = "evidence-images", nullable = false, columnDefinition = "text[]")
     private List<String> evidenceImages;
 
-    @Column(name = "created_by_user_id", nullable = false)
-    private Long createdByUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id", nullable = false)
+    private User createdByUserId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "request_status", nullable = false, length = 20)
