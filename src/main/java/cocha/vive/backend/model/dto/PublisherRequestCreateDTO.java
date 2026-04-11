@@ -21,7 +21,4 @@ public class PublisherRequestCreateDTO {
     @Schema(description = "Legal name of the person or organization", example = "Cocha Cultura SRL")
     private String legalEntityName;
 
-    /*@NotEmpty
-    @Schema(description = "Evidence image URLs supporting the request")
-    private List<String> evidenceImages;*/
 }
