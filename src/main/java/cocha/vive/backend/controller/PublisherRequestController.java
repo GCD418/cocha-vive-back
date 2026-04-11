@@ -19,45 +19,55 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/publisher-requests")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN')")
 public class PublisherRequestController {
 
     private final PublisherRequestService publisherRequestService;
 
     @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<PublisherRequestResponseDTO> getAllRequests() {
         return publisherRequestService.getAll();
     }
 
     @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/pending")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<PublisherRequestResponseDTO> getPendingRequests() {
         return publisherRequestService.getAllPending();
     }
 
     @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PublisherRequestResponseDTO> getRequestById(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.getById(id));
     }
 
     @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN','USER')")
     public ResponseEntity<PublisherRequestResponseDTO> createRequest(
         @Valid @RequestPart("request") PublisherRequestCreateDTO dto,
         @RequestPart("images") List<MultipartFile> images) {
         return ResponseEntity.status(HttpStatus.CREATED).body(publisherRequestService.createRequest(dto, images));
     }
-
+    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
+    @GetMapping("/my-request")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<PublisherRequestResponseDTO> getMyRequest() {
+        return ResponseEntity.ok(publisherRequestService.getMyRequest());
+    }
     @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PatchMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PublisherRequestResponseDTO> approveRequest(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.approveRequest(id));
     }
 
     @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PatchMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PublisherRequestResponseDTO> rejectRequest(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.rejectRequest(id));
     }
