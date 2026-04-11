@@ -84,10 +84,10 @@ class EventRepositoryTest {
             Event featured = buildEvent();
             featured.setIsFeatured(true);
 
-            when(eventRepository.findByIsActiveTrueAndIsFeaturedTrue())
+            when(eventRepository.findActiveFeatured())
                 .thenReturn(List.of(featured));
 
-            List<Event> result = eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+            List<Event> result = eventRepository.findActiveFeatured();
 
             assertThat(result).hasSize(1);
             assertThat(result.get(0).getIsFeatured()).isTrue();
@@ -96,10 +96,10 @@ class EventRepositoryTest {
         @Test
         @DisplayName("retorna lista vacía cuando no hay destacados")
         void shouldReturnEmptyWhenNoFeatured() {
-            when(eventRepository.findByIsActiveTrueAndIsFeaturedTrue())
+            when(eventRepository.findActiveFeatured())
                 .thenReturn(List.of());
 
-            List<Event> result = eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+            List<Event> result = eventRepository.findActiveFeatured();
 
             assertThat(result).isEmpty();
         }

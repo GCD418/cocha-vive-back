@@ -90,23 +90,23 @@ class EventControllerTest {
         @DisplayName("retorna lista de eventos")
         void shouldReturnListOfEvents() {
             List<Event> events = List.of(buildEvent(), buildEvent());
-            when(eventService.getAll()).thenReturn(events);
+            when(eventService.getAllPublic()).thenReturn(events);
 
             List<Event> response = eventController.getAllEvents();
 
             assertThat(response).hasSize(2);
-            verify(eventService, times(1)).getAll();
+            verify(eventService, times(1)).getAllPublic();
         }
 
         @Test
         @DisplayName("retorna lista vacía cuando no hay eventos")
         void shouldReturnEmptyListWhenNoEvents() {
-            when(eventService.getAll()).thenReturn(List.of());
+            when(eventService.getAllPublic()).thenReturn(List.of());
 
             List<Event> response = eventController.getAllEvents();
 
             assertThat(response).isEmpty();
-            verify(eventService, times(1)).getAll();
+            verify(eventService, times(1)).getAllPublic();
         }
     }
 
