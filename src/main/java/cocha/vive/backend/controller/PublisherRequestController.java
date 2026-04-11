@@ -46,7 +46,7 @@ public class PublisherRequestController {
 
     @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN','USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     public ResponseEntity<PublisherRequestResponseDTO> createRequest(
         @Valid @RequestPart("request") PublisherRequestCreateDTO dto,
         @RequestPart("images") List<MultipartFile> images) {
@@ -54,7 +54,7 @@ public class PublisherRequestController {
     }
     @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/my-request")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<PublisherRequestResponseDTO> getMyRequest() {
         return ResponseEntity.ok(publisherRequestService.getMyRequest());
     }

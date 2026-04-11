@@ -61,7 +61,7 @@ public class PublisherRequestService {
         Long actualUserId = auditService.getActualUserId();
         log.debug("Retrieving publisher request for user id: {}", actualUserId);
         PublisherRequest request = publisherRequestRepository
-            .findByCreatedByUserIdIdAndIsActiveTrue(actualUserId)  // ← corregido
+            .findByCreatedByUserIdIdAndIsActiveTrue(actualUserId)
             .orElseThrow(() -> new ResourceNotFoundException(
                 "No publisher request found for user id: " + actualUserId));
         return publisherRequestMapper.toResponseDto(request);
@@ -102,7 +102,8 @@ public class PublisherRequestService {
         PublisherRequest publisherRequest = publisherRequestMapper.toEntity(dto);
         publisherRequest.setEvidenceImages(cloudinaryService.uploadImages(images));
         publisherRequest.setCreatedByUserId(actualUser);
-
+        publisherRequest.setRequestStatus(RequestStatus.PENDING);
+        publisherRequest.setIsActive(true);
         PublisherRequest savedRequest = publisherRequestRepository.save(publisherRequest);
         log.info("Publisher request created with id: {} by user id: {}", savedRequest.getId(), actualUserId);
         return publisherRequestMapper.toResponseDto(savedRequest);
