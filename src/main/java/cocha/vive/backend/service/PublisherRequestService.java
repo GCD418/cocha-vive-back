@@ -102,8 +102,6 @@ public class PublisherRequestService {
         PublisherRequest publisherRequest = publisherRequestMapper.toEntity(dto);
         publisherRequest.setEvidenceImages(cloudinaryService.uploadImages(images));
         publisherRequest.setCreatedByUserId(actualUser);
-        publisherRequest.setRequestStatus(RequestStatus.PENDING);
-        publisherRequest.setIsActive(true);
         PublisherRequest savedRequest = publisherRequestRepository.save(publisherRequest);
         log.info("Publisher request created with id: {} by user id: {}", savedRequest.getId(), actualUserId);
         return publisherRequestMapper.toResponseDto(savedRequest);

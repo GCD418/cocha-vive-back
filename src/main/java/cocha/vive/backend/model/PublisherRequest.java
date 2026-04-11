@@ -40,6 +40,7 @@ public class PublisherRequest {
     @JoinColumn(name = "created_by_user_id", nullable = false)
     private User createdByUserId;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "request_status", nullable = false, length = 20)
     private RequestStatus requestStatus = RequestStatus.PENDING;
