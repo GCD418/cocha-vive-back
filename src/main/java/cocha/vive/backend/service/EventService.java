@@ -33,10 +33,25 @@ public class EventService {
     private final AuditService auditService;
     private final EventMapper eventMapper;
 
-    public List<Event> getAll(){
-        log.debug("Retrieving all events");
-        List<Event> events = eventRepository.findAll();
-        log.debug("Retrieved {} events", events.size());
+    public List<Event> getAllPublic(){
+        log.debug("Retrieving all public events");
+        List<Event> events = eventRepository.findAllPublic();
+        log.debug("Retrieved {} public events", events.size());
+        return events;
+    }
+
+    public List<Event> getMyEvents() {
+        Long userId = auditService.getActualUserId();
+        log.debug("Retrieving events for publisher id: {}", userId);
+        List<Event> events = eventRepository.findAllByOrganizedByUserId(userId);
+        log.debug("Retrieved {} events for publisher id: {}", events.size(), userId);
+        return events;
+    }
+
+    public List<Event> getAllForAdmin() {
+        log.debug("Retrieving all events for admin");
+        List<Event> events = eventRepository.findAllForAdmin();
+        log.debug("Retrieved {} events for admin", events.size());
         return events;
     }
 
@@ -82,7 +97,7 @@ public class EventService {
 
     public List<Event> getFeatured() {
         log.debug("Retrieving featured events");
-        List<Event> events = eventRepository.findByIsActiveTrueAndIsFeaturedTrue();
+        List<Event> events = eventRepository.findActiveFeatured();
         log.debug("Found {} featured events", events.size());
         return events;
     }

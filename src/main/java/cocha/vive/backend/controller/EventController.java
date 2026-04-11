@@ -3,6 +3,7 @@ package cocha.vive.backend.controller;
 import cocha.vive.backend.core.annotations.FeatureFlag;
 import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.Event;
+import cocha.vive.backend.model.EventStatus;
 import cocha.vive.backend.model.dto.EventRequest;
 import cocha.vive.backend.service.EventService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,19 @@ public class EventController {
 
     @GetMapping("/events")
     public List<Event> getAllEvents(){
-        return eventService.getAll();
+        return eventService.getAllPublic();
+    }
+
+    @GetMapping("/events/my-events")
+    @PreAuthorize("hasRole('PUBLISHER')")
+    public List<Event> getMyEvents() {
+        return eventService.getMyEvents();
+    }
+
+    @GetMapping("/events/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Event> getAllEventsForAdmin() {
+        return eventService.getAllForAdmin();
     }
 
     @PostMapping(value = "/events", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -67,6 +80,20 @@ public class EventController {
         @RequestPart("event") EventRequest dto,
         @RequestPart(value = "images", required = false) List<MultipartFile> images) {
         return ResponseEntity.ok(eventService.update(id, dto, images));
+    }
+
+    @PatchMapping("/events/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> approveEvent(@PathVariable Long id) {
+        eventService.updateStatus(id, EventStatus.APPROVED);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/events/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> rejectEvent(@PathVariable Long id) {
+        eventService.updateStatus(id, EventStatus.REJECTED);
+        return ResponseEntity.noContent().build();
     }
 
 }

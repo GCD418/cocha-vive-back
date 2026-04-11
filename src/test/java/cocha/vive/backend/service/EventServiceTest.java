@@ -54,7 +54,7 @@ class EventServiceTest {
     void shouldReturnAllEvents() {
         when(eventRepository.findAll()).thenReturn(List.of(new Event(), new Event()));
 
-        List<Event> result = eventService.getAll();
+        List<Event> result = eventService.getAllPublic();
 
         assertEquals(2, result.size());
         verify(eventRepository).findAll();
@@ -239,13 +239,13 @@ class EventServiceTest {
     }
     @Test
     void shouldReturnFeaturedEvents() {
-        when(eventRepository.findByIsActiveTrueAndIsFeaturedTrue())
+        when(eventRepository.findActiveFeatured())
             .thenReturn(List.of(new Event()));
 
         List<Event> result = eventService.getFeatured();
 
         assertEquals(1, result.size());
-        verify(eventRepository).findByIsActiveTrueAndIsFeaturedTrue();
+        verify(eventRepository).findActiveFeatured();
     }
     @Test
     void shouldReturnEventsByCategoryId() {

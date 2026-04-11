@@ -8,7 +8,8 @@ public record UserMeDTO(
     String firstLastName,
     String secondLastName,
     String email,
-    String photoUrl
+    String photoUrl,
+    String role
 ) {
     public UserMeDTO(User user) {
         this(
@@ -17,7 +18,8 @@ public record UserMeDTO(
             user.getFirstLastName(),
             user.getSecondLastName(),
             user.getEmail(),
-            user.getPhotoUrl()
+            user.getPhotoUrl(),
+            user.getRole()
         );
     }
 }
