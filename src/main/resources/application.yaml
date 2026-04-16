@@ -62,6 +62,10 @@ springdoc:
   swagger-ui:
     enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
 
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,https://cocha-vive.netlify.app}
+
 unleash:
   app-name: cocha-vive-unleash
   instance-id: unleash-onboarding-instance
