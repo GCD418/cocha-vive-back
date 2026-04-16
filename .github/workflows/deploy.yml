@@ -1,0 +1,59 @@
+name: Deploy to Azure VM
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cochavive
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build JAR
+        run: |
+          chmod +x mvnw
+          ./mvnw -B clean package -DskipTests
+
+      - name: Copy JAR to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "target/*.jar,!target/*original*.jar"
+          target: "/opt/cochavive/"
+          strip_components: 1
+
+      - name: Rename and restart services
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /opt/cochavive
+
+            NEW_JAR=$(ls -1t *.jar 2>/dev/null | grep -v 'original' | head -n 1)
+            if [ -z "$NEW_JAR" ]; then
+              echo "No JAR found in /opt/cochavive"
+              exit 1
+            fi
+
+            mv -f "$NEW_JAR" app.jar
+            sudo systemctl restart cochavive
+            sudo systemctl reload caddy || true
+            sudo systemctl --no-pager --full status cochavive | head -n 20
