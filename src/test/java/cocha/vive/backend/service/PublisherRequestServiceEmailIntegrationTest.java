@@ -39,6 +39,8 @@ class PublisherRequestServiceEmailIntegrationTest {
     private UserService userService;
     @Mock
     private EmailService emailService;
+    @Mock
+    private FeatureToggleService featureToggleService;
 
     @InjectMocks
     private PublisherRequestService publisherRequestService;
@@ -76,6 +78,7 @@ class PublisherRequestServiceEmailIntegrationTest {
         when(publisherRequestMapper.toEntity(dto)).thenReturn(mapped);
         when(cloudinaryService.uploadImages(anyList())).thenReturn(List.of("img.jpg"));
         when(publisherRequestRepository.save(mapped)).thenReturn(saved);
+        when(featureToggleService.isEnabled("send-new-publisher-request-notification-email")).thenReturn(true);
         when(userService.getAllAdmins()).thenReturn(List.of(admin1, admin2));
         when(publisherRequestMapper.toResponseDto(saved)).thenReturn(responseDTO);
 
@@ -84,5 +87,37 @@ class PublisherRequestServiceEmailIntegrationTest {
         assertThat(result).isNotNull();
         verify(emailService).sendNewConvertToPublisherRequestEmail(admin1, saved);
         verify(emailService).sendNewConvertToPublisherRequestEmail(admin2, saved);
+    }
+
+    @Test
+    @DisplayName("createRequest should not notify admins when feature flag disabled")
+    void createRequest_shouldNotNotifyAdminsWhenFeatureFlagDisabled() {
+        Long userId = 30L;
+        User requester = new User();
+        requester.setId(userId);
+
+        PublisherRequestCreateDTO dto = new PublisherRequestCreateDTO("Motivo", "Entidad");
+        PublisherRequest mapped = new PublisherRequest();
+        PublisherRequest saved = new PublisherRequest();
+        saved.setCreatedByUserId(requester);
+
+        PublisherRequestResponseDTO responseDTO = new PublisherRequestResponseDTO(
+            1L, "Motivo", "Entidad", List.of(), null, null, null, null, true, null
+        );
+
+        when(auditService.getActualUserId()).thenReturn(userId);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
+        when(publisherRequestRepository.findByCreatedByUserIdIdAndIsActiveTrue(userId)).thenReturn(Optional.empty());
+        when(publisherRequestMapper.toEntity(dto)).thenReturn(mapped);
+        when(cloudinaryService.uploadImages(anyList())).thenReturn(List.of("img.jpg"));
+        when(publisherRequestRepository.save(mapped)).thenReturn(saved);
+        when(featureToggleService.isEnabled("send-new-publisher-request-notification-email")).thenReturn(false);
+        when(publisherRequestMapper.toResponseDto(saved)).thenReturn(responseDTO);
+
+        PublisherRequestResponseDTO result = publisherRequestService.createRequest(dto, List.of());
+
+        assertThat(result).isNotNull();
+        verify(userService, never()).getAllAdmins();
+        verify(emailService, never()).sendNewConvertToPublisherRequestEmail(any(), any());
     }
 }

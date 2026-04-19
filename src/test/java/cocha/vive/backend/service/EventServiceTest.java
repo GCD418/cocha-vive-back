@@ -52,6 +52,9 @@ class EventServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private FeatureToggleService featureToggleService;
+
     @InjectMocks
     private EventService eventService;
 
@@ -98,6 +101,7 @@ class EventServiceTest {
         when(cloudinaryService.uploadImages(any())).thenReturn(List.of("img1.jpg"));
         when(eventMapper.toEntity(eq(dto), eq(category), eq(user), anyList())).thenReturn(mappedEvent);
         when(eventRepository.save(mappedEvent)).thenReturn(mappedEvent);
+        when(featureToggleService.isEnabled("send-new-event-notification-email")).thenReturn(true);
         when(userService.getAllAdmins()).thenReturn(List.of(admin));
 
         Event result = eventService.create(dto, List.of());
@@ -139,12 +143,43 @@ class EventServiceTest {
         when(cloudinaryService.uploadImages(any())).thenReturn(List.of());
         when(eventMapper.toEntity(eq(dto), eq(category), eq(creator), anyList())).thenReturn(mappedEvent);
         when(eventRepository.save(mappedEvent)).thenReturn(mappedEvent);
+        when(featureToggleService.isEnabled("send-new-event-notification-email")).thenReturn(true);
         when(userService.getAllAdmins()).thenReturn(List.of(admin1, admin2));
 
         eventService.create(dto, List.of());
 
         verify(emailService).sendNewEventWantsToBePublishedEmail(admin1, mappedEvent);
         verify(emailService).sendNewEventWantsToBePublishedEmail(admin2, mappedEvent);
+    }
+
+    @Test
+    void shouldNotSendEventNotificationWhenFeatureFlagIsDisabled() {
+        EventRequest dto = new EventRequest();
+        dto.setTitle("No notify event");
+        dto.setCategoryId(11L);
+
+        User creator = new User();
+        creator.setId(44L);
+
+        Category category = new Category();
+        category.setId(11L);
+
+        Event mappedEvent = new Event();
+        mappedEvent.setTitle("No notify event");
+        mappedEvent.setOrganizedByUser(creator);
+
+        when(auditService.getActualUserId()).thenReturn(44L);
+        when(userRepository.findById(44L)).thenReturn(Optional.of(creator));
+        when(categoryRepository.findById(11L)).thenReturn(Optional.of(category));
+        when(cloudinaryService.uploadImages(any())).thenReturn(List.of());
+        when(eventMapper.toEntity(eq(dto), eq(category), eq(creator), anyList())).thenReturn(mappedEvent);
+        when(eventRepository.save(mappedEvent)).thenReturn(mappedEvent);
+        when(featureToggleService.isEnabled("send-new-event-notification-email")).thenReturn(false);
+
+        eventService.create(dto, List.of());
+
+        verify(userService, never()).getAllAdmins();
+        verify(emailService, never()).sendNewEventWantsToBePublishedEmail(any(), any());
     }
 
     @Test
