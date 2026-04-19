@@ -20,29 +20,26 @@ import java.util.List;
 @RequestMapping("/api/publisher-requests")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
 public class PublisherRequestController {
 
     private final PublisherRequestService publisherRequestService;
 
-    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/all")
     public List<PublisherRequestResponseDTO> getAllRequests() {
         return publisherRequestService.getAll();
     }
 
-    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/pending")
     public List<PublisherRequestResponseDTO> getPendingRequests() {
         return publisherRequestService.getAllPending();
     }
 
-    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/{id}")
     public ResponseEntity<PublisherRequestResponseDTO> getRequestById(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.getById(id));
     }
 
-    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<PublisherRequestResponseDTO> createRequest(
@@ -50,19 +47,16 @@ public class PublisherRequestController {
         @RequestPart("images") List<MultipartFile> images) {
         return ResponseEntity.status(HttpStatus.CREATED).body(publisherRequestService.createRequest(dto, images));
     }
-    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @GetMapping("/my-request")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PublisherRequestResponseDTO> getMyRequest() {
         return ResponseEntity.ok(publisherRequestService.getMyRequest());
     }
-    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PatchMapping("/{id}/approve")
     public ResponseEntity<PublisherRequestResponseDTO> approveRequest(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.approveRequest(id));
     }
 
-    @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
     @PatchMapping("/{id}/reject")
     public ResponseEntity<PublisherRequestResponseDTO> rejectRequest(@PathVariable Long id) {
         return ResponseEntity.ok(publisherRequestService.rejectRequest(id));
