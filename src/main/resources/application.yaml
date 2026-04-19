@@ -8,6 +8,9 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASS}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:3}
+      minimum-idle: ${HIKARI_MIN_IDLE:1}
 
   servlet:
     multipart:
@@ -22,7 +25,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: ${HIBERNATE_FORMAT_SQL:false}
+        generate_statistics: ${HIBERNATE_GENERATE_STATISTICS:false}
 
   cloudinary:
     cloud-name: ${CLOUDINARY_CLOUD_NAME}
@@ -45,6 +49,22 @@ logging:
     cocha:
       vive:
         backend: ${APP_LOG_LEVEL:INFO}
+    "org.hibernate.SQL": ${HIBERNATE_SQL_LOG_LEVEL:WARN}
+    "org.hibernate.orm.jdbc.bind": ${HIBERNATE_BIND_LOG_LEVEL:WARN}
+
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,https://cocha-vive.netlify.app}
 
 unleash:
   app-name: cocha-vive-unleash
