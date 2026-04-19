@@ -1,6 +1,7 @@
 package cocha.vive.backend.exception;
 
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
+import cocha.vive.backend.exception.InvalidRoleTransitionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,6 +32,17 @@ public class GlobalExceptionHandler {
             .timestamp(LocalDateTime.now())
             .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(InvalidRoleTransitionException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInvalidRoleTransition(InvalidRoleTransitionException ex) {
+        ErrorResponseDTO error = ErrorResponseDTO.builder()
+            .status(HttpStatus.BAD_REQUEST.value())
+            .code("INVALID_ROLE_TRANSITION")
+            .message(ex.getMessage())
+            .timestamp(LocalDateTime.now())
+            .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
