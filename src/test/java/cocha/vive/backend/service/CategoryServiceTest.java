@@ -3,6 +3,7 @@ package cocha.vive.backend.service;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.Category;
 import cocha.vive.backend.model.dto.CategoryCreateDTO;
+import cocha.vive.backend.model.mapper.CategoryMapper;
 import cocha.vive.backend.repository.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,6 +28,9 @@ class CategoryServiceTest {
 
     @Mock
     private AuditService auditService;
+
+    @Mock
+    private CategoryMapper categoryMapper;
 
     @InjectMocks
     private CategoryService categoryService;
@@ -62,7 +66,13 @@ class CategoryServiceTest {
     @DisplayName("should create category successfully")
     void shouldCreateCategory() {
         CategoryCreateDTO dto = new CategoryCreateDTO("Music","Desc", "Icon");
+        Category mapped = Category.builder()
+            .name("Music")
+            .description("Desc")
+            .identifyingIcon("Icon")
+            .build();
 
+        when(categoryMapper.toEntity(dto)).thenReturn(mapped);
         when(categoryRepository.save(any(Category.class)))
             .thenAnswer(i -> i.getArgument(0));
 
@@ -72,6 +82,7 @@ class CategoryServiceTest {
         assertThat(result.getName()).isEqualTo("Music");
         assertThat(result.getDescription()).isEqualTo("Desc");
 
+        verify(categoryMapper).toEntity(dto);
         verify(categoryRepository).save(any(Category.class));
     }
 

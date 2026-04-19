@@ -28,7 +28,21 @@ spring:
           google:
             client-id: test-google-client-id
 
+  mail:
+    host: localhost
+    port: 2525
+
+app:
+  email:
+    from: test@cochavive.local
+
 cloudinary:
   cloud-name: test-cloud
   api-key: test-key
   api-secret: test-secret
+
+unleash:
+  app-name: test-backend
+  api-url: http://localhost:4242/api/
+  api-token: test-token
+  environment: test
