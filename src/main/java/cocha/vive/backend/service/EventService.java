@@ -32,6 +32,8 @@ public class EventService {
     private final CloudinaryService cloudinaryService;
     private final AuditService auditService;
     private final EventMapper eventMapper;
+    private final EmailService emailService;
+    private final UserService userService;
 
     public List<Event> getAllPublic(){
         log.debug("Retrieving all public events");
@@ -73,6 +75,10 @@ public class EventService {
 
         Event savedEvent = eventRepository.save(event);
         log.info("Event created with id: {}", savedEvent.getId());
+
+        userService.getAllAdmins().forEach(admin ->
+            emailService.sendNewEventWantsToBePublishedEmail(admin, savedEvent)
+        );
 
         return savedEvent;
     }

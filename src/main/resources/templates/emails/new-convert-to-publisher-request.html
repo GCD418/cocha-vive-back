@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Nueva solicitud para convertirse en publisher</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#222;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f6f8;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e9edf2;">
+                <tr>
+                    <td style="background:linear-gradient(135deg,#0f3c5f 0%,#1977b9 100%);padding:28px 32px;color:#ffffff;">
+                        <h1 style="margin:0;font-size:22px;line-height:1.2;">Nueva solicitud para Publisher</h1>
+                        <p style="margin:10px 0 0;font-size:14px;opacity:0.95;">Un usuario quiere publicar eventos</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:28px 32px;">
+                        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#3a4754;">
+                            Hola <strong th:text="${adminName}">Admin</strong>,
+                        </p>
+                        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#3a4754;">
+                            Se recibió una nueva solicitud para convertirse en publisher.
+                        </p>
+
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;border:1px solid #e8eef4;border-radius:10px;">
+                            <tr>
+                                <td style="padding:16px 18px;">
+                                    <p style="margin:0 0 10px;font-size:14px;"><strong>Solicitante:</strong> <span th:text="${requesterName}">Nombre Usuario</span></p>
+                                    <p style="margin:0 0 10px;font-size:14px;"><strong>Entidad legal:</strong> <span th:text="${legalEntityName}">Empresa XYZ</span></p>
+                                    <p style="margin:0;font-size:14px;"><strong>Motivo:</strong> <span th:text="${requestReason}">Detalle de la solicitud</span></p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:#5f6b76;">
+                            Revisá la solicitud desde el módulo administrativo para aprobarla o rechazarla.
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:18px 32px 28px;background:#f8fafc;border-top:1px solid #e9edf2;">
+                        <p style="margin:0;font-size:12px;color:#6b7785;line-height:1.6;">
+                            Notificación automática de CochaVive.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

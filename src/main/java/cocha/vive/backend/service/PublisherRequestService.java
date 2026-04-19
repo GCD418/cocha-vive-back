@@ -30,6 +30,8 @@ public class PublisherRequestService {
     private final CloudinaryService cloudinaryService;
     private final AuditService auditService;
     private final UserRepository userRepository;
+    private final UserService userService;
+    private final EmailService emailService;
 
     public List<PublisherRequestResponseDTO> getAll() {
         log.debug("Retrieving all publisher requests ordered by createdAt ASC");
@@ -104,6 +106,11 @@ public class PublisherRequestService {
         publisherRequest.setCreatedByUserId(actualUser);
         PublisherRequest savedRequest = publisherRequestRepository.save(publisherRequest);
         log.info("Publisher request created with id: {} by user id: {}", savedRequest.getId(), actualUserId);
+
+        userService.getAllAdmins().forEach(admin ->
+            emailService.sendNewConvertToPublisherRequestEmail(admin, savedRequest)
+        );
+
         return publisherRequestMapper.toResponseDto(savedRequest);
     }
 
