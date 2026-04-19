@@ -44,6 +44,20 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_ADDRESS}
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        debug: false
+
 logging:
   level:
     cocha:
@@ -65,6 +79,8 @@ springdoc:
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,https://cocha-vive.netlify.app}
+  email:
+    from: "CochaVive manager <${GMAIL_ADDRESS}>"
 
 unleash:
   app-name: cocha-vive-unleash
