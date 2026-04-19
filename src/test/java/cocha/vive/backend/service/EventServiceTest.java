@@ -3,6 +3,7 @@ package cocha.vive.backend.service;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.*;
 import cocha.vive.backend.model.dto.EventRequest;
+import cocha.vive.backend.model.mapper.EventMapper;
 import cocha.vive.backend.repository.CategoryRepository;
 import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
@@ -42,6 +43,15 @@ class EventServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private EventMapper eventMapper;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private EventService eventService;
 
@@ -52,12 +62,12 @@ class EventServiceTest {
 
     @Test
     void shouldReturnAllEvents() {
-        when(eventRepository.findAll()).thenReturn(List.of(new Event(), new Event()));
+        when(eventRepository.findAllPublic()).thenReturn(List.of(new Event(), new Event()));
 
         List<Event> result = eventService.getAllPublic();
 
         assertEquals(2, result.size());
-        verify(eventRepository).findAll();
+        verify(eventRepository).findAllPublic();
     }
 
     @Test
@@ -72,11 +82,23 @@ class EventServiceTest {
         Category category = new Category();
         category.setId(1L);
 
+        Event mappedEvent = new Event();
+        mappedEvent.setTitle("Test Event");
+        mappedEvent.setIsActive(true);
+        mappedEvent.setEventStatus(EventStatus.APPROVED);
+        mappedEvent.setOrganizedByUser(user);
+
+        User admin = new User();
+        admin.setId(20L);
+        admin.setEmail("admin@mail.com");
+
         when(auditService.getActualUserId()).thenReturn(10L);
         when(userRepository.findById(10L)).thenReturn(Optional.of(user));
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
         when(cloudinaryService.uploadImages(any())).thenReturn(List.of("img1.jpg"));
-        when(eventRepository.save(any(Event.class))).thenAnswer(i -> i.getArgument(0));
+        when(eventMapper.toEntity(eq(dto), eq(category), eq(user), anyList())).thenReturn(mappedEvent);
+        when(eventRepository.save(mappedEvent)).thenReturn(mappedEvent);
+        when(userService.getAllAdmins()).thenReturn(List.of(admin));
 
         Event result = eventService.create(dto, List.of());
 
@@ -85,7 +107,44 @@ class EventServiceTest {
         assertTrue(result.getIsActive());
         assertEquals(EventStatus.APPROVED, result.getEventStatus());
 
-        verify(eventRepository).save(any(Event.class));
+        verify(eventMapper).toEntity(eq(dto), eq(category), eq(user), anyList());
+        verify(eventRepository).save(mappedEvent);
+        verify(emailService).sendNewEventWantsToBePublishedEmail(admin, mappedEvent);
+    }
+
+    @Test
+    void shouldSendNotificationToEachAdminWhenCreatingEvent() {
+        EventRequest dto = new EventRequest();
+        dto.setTitle("Admin notification event");
+        dto.setCategoryId(11L);
+
+        User creator = new User();
+        creator.setId(44L);
+
+        Category category = new Category();
+        category.setId(11L);
+
+        Event mappedEvent = new Event();
+        mappedEvent.setTitle("Admin notification event");
+        mappedEvent.setOrganizedByUser(creator);
+
+        User admin1 = new User();
+        admin1.setId(1L);
+        User admin2 = new User();
+        admin2.setId(2L);
+
+        when(auditService.getActualUserId()).thenReturn(44L);
+        when(userRepository.findById(44L)).thenReturn(Optional.of(creator));
+        when(categoryRepository.findById(11L)).thenReturn(Optional.of(category));
+        when(cloudinaryService.uploadImages(any())).thenReturn(List.of());
+        when(eventMapper.toEntity(eq(dto), eq(category), eq(creator), anyList())).thenReturn(mappedEvent);
+        when(eventRepository.save(mappedEvent)).thenReturn(mappedEvent);
+        when(userService.getAllAdmins()).thenReturn(List.of(admin1, admin2));
+
+        eventService.create(dto, List.of());
+
+        verify(emailService).sendNewEventWantsToBePublishedEmail(admin1, mappedEvent);
+        verify(emailService).sendNewEventWantsToBePublishedEmail(admin2, mappedEvent);
     }
 
     @Test
@@ -194,6 +253,13 @@ class EventServiceTest {
 
         EventRequest dto = new EventRequest();
         dto.setTitle("Updated Title");
+
+        doAnswer(invocation -> {
+            EventRequest requestArg = invocation.getArgument(0);
+            Event eventArg = invocation.getArgument(1);
+            eventArg.setTitle(requestArg.getTitle());
+            return null;
+        }).when(eventMapper).updateEventFromRequest(any(EventRequest.class), any(Event.class));
 
         when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
         when(eventRepository.save(any())).thenAnswer(i -> i.getArgument(0));

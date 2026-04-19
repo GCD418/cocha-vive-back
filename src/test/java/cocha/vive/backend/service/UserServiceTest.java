@@ -2,6 +2,7 @@ package cocha.vive.backend.service;
 
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.UserCreateDTO;
+import cocha.vive.backend.model.mapper.UserMapper;
 import cocha.vive.backend.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,9 @@ class UserServiceTest {
 
     @Mock
     private AuditService auditService;
+
+    @Mock
+    private UserMapper userMapper;
 
     @InjectMocks
     private UserService userService;
@@ -61,8 +65,12 @@ class UserServiceTest {
         dto.setName("Diego");
         dto.setFirstLastName("Rios");
 
-        when(userRepository.save(any(User.class)))
-            .thenAnswer(i -> i.getArgument(0));
+        User mapped = new User();
+        mapped.setEmail("test@mail.com");
+        mapped.setNames("Diego");
+
+        when(userMapper.toEntity(dto)).thenReturn(mapped);
+        when(userRepository.save(mapped)).thenReturn(mapped);
 
         User result = userService.create(dto);
 
@@ -70,7 +78,8 @@ class UserServiceTest {
         assertEquals("test@mail.com", result.getEmail());
         assertEquals("Diego", result.getNames());
 
-        verify(userRepository).save(any(User.class));
+        verify(userMapper).toEntity(dto);
+        verify(userRepository).save(mapped);
     }
 
     @Test
@@ -113,5 +122,20 @@ class UserServiceTest {
         assertNotNull(result);
         assertEquals(99L, result.getId()); // 🔥 mejora clave
         verify(auditService).getActualUser();
+    }
+
+    @Test
+    void shouldReturnAllAdmins() {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setRole("ROLE_ADMIN");
+
+        when(userRepository.findAllByRole("ROLE_ADMIN")).thenReturn(List.of(admin));
+
+        List<User> admins = userService.getAllAdmins();
+
+        assertEquals(1, admins.size());
+        assertEquals("ROLE_ADMIN", admins.get(0).getRole());
+        verify(userRepository).findAllByRole("ROLE_ADMIN");
     }
 }
