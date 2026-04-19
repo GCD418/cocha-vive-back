@@ -23,6 +23,7 @@ import org.thymeleaf.context.Context;
 
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -72,6 +73,7 @@ public class EmailServiceImpl implements EmailService {
         variables.put("eventTitle", event.getTitle());
         variables.put("eventDateStart", event.getDateStart() != null ? DATE_TIME_FORMATTER.format(event.getDateStart()) : "No definido");
         variables.put("organizerName", event.getOrganizedByUser() != null ? resolveUserDisplayName(event.getOrganizedByUser()) : "Organizador desconocido");
+        variables.put("eventCoverImageUrl", resolveFirstPhotoUrl(event.getPhotoLinks()));
 
         EmailRequest request = new EmailRequest(
             adminRecipient.getEmail(),
@@ -177,5 +179,18 @@ public class EmailServiceImpl implements EmailService {
             return displayName.toString();
         }
         return user.getEmail() != null ? user.getEmail() : "Usuario";
+    }
+
+    private String resolveFirstPhotoUrl(List<String> photoLinks) {
+        if (photoLinks == null || photoLinks.isEmpty()) {
+            return null;
+        }
+
+        return photoLinks.stream()
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .filter(link -> !link.isBlank())
+            .findFirst()
+            .orElse(null);
     }
 }

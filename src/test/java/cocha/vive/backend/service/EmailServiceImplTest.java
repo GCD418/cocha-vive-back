@@ -24,6 +24,8 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,6 +99,7 @@ class EmailServiceImplTest {
         event.setTitle("Festival Cultural");
         event.setDateStart(LocalDateTime.of(2026, 4, 20, 19, 30));
         event.setOrganizedByUser(organizer);
+        event.setPhotoLinks(List.of("https://cdn.cochavive.test/event-cover.jpg", "https://cdn.cochavive.test/extra.jpg"));
 
         when(appEmailProperties.getFrom()).thenReturn("no-reply@cochavive.com");
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
@@ -111,6 +114,7 @@ class EmailServiceImplTest {
         assertThat(context.getVariable("adminName")).isEqualTo("Admin Uno");
         assertThat(context.getVariable("eventTitle")).isEqualTo("Festival Cultural");
         assertThat(context.getVariable("organizerName")).isEqualTo("Juan López");
+        assertThat(context.getVariable("eventCoverImageUrl")).isEqualTo("https://cdn.cochavive.test/event-cover.jpg");
 
         ArgumentCaptor<EmailAuditLog> auditCaptor = ArgumentCaptor.forClass(EmailAuditLog.class);
         verify(emailAuditLogRepository).save(auditCaptor.capture());
@@ -181,6 +185,30 @@ class EmailServiceImplTest {
         assertThat(context.getVariable("requesterName")).isEqualTo("María Sosa");
         assertThat(context.getVariable("legalEntityName")).isEqualTo("Cocha Cultura SRL");
         assertThat(context.getVariable("requestReason")).isEqualTo("Organizamos eventos semanales");
+    }
+
+    @Test
+    @DisplayName("sendNewEventWantsToBePublishedEmail should set null cover image when event has no photos")
+    void sendNewEventWantsToBePublishedEmail_shouldSetNullCoverImageWhenNoPhotos() {
+        User admin = user(1L, "Admin", "Uno", "admin@mail.com", "ROLE_ADMIN");
+        User organizer = user(2L, "Juan", "López", "juan@mail.com", "ROLE_USER");
+
+        Event event = new Event();
+        event.setTitle("Evento sin imagen");
+        event.setDateStart(LocalDateTime.of(2026, 4, 20, 19, 30));
+        event.setOrganizedByUser(organizer);
+        event.setPhotoLinks(new ArrayList<>(List.of("   ", "")));
+
+        when(appEmailProperties.getFrom()).thenReturn("no-reply@cochavive.com");
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        when(templateEngine.process(eq("emails/new-event-wants-to-be-published"), any(Context.class)))
+            .thenReturn("<html>event</html>");
+
+        emailService.sendNewEventWantsToBePublishedEmail(admin, event);
+
+        ArgumentCaptor<Context> contextCaptor = ArgumentCaptor.forClass(Context.class);
+        verify(templateEngine).process(eq("emails/new-event-wants-to-be-published"), contextCaptor.capture());
+        assertThat(contextCaptor.getValue().getVariable("eventCoverImageUrl")).isNull();
     }
 
     @Test
