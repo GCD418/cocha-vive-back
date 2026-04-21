@@ -14,12 +14,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("api/users")
@@ -52,14 +49,6 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserMeDTO> getCurrentUser() {
         return ResponseEntity.ok(userMapper.toMeDto(userService.getActualUser()));
-    }
-
-    @GetMapping
-    @PreAuthorize("hasRole('SUPERADMIN')")
-    public ResponseEntity<List<UserMeDTO>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAll().stream()
-            .map(userMapper::toMeDto)
-            .toList());
     }
 
 }

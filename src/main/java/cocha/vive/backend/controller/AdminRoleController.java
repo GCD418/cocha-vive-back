@@ -2,7 +2,10 @@ package cocha.vive.backend.controller;
 
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
 import cocha.vive.backend.model.dto.RoleChangeResponseDTO;
+import cocha.vive.backend.model.dto.UserMeDTO;
+import cocha.vive.backend.model.mapper.UserMapper;
 import cocha.vive.backend.service.AdminRoleService;
+import cocha.vive.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
@@ -21,7 +26,17 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Admin Role Management", description = "Endpoints for promoting and demoting user roles")
 public class AdminRoleController {
 
+    private final UserService userService;
+    private final UserMapper userMapper;
     private final AdminRoleService adminRoleService;
+
+    @Operation(summary = "Get all users")
+    @GetMapping
+    public ResponseEntity<List<UserMeDTO>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAll().stream()
+            .map(userMapper::toMeDto)
+            .toList());
+    }
 
     @Operation(summary = "Promote a ROLE_USER to ROLE_ADMIN")
     @ApiResponses({
