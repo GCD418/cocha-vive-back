@@ -19,6 +19,8 @@ public class PublisherRequestResponseDTO {
 
     private String legalEntityName;
 
+    private String rejectionReason;
+
     private List<String> evidenceImages;
 
     private UserMeDTO createdByUser;
