@@ -1,5 +1,6 @@
 package cocha.vive.backend.service;
 
+import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.Category;
 import cocha.vive.backend.model.Event;
@@ -32,6 +33,9 @@ public class EventService {
     private final CloudinaryService cloudinaryService;
     private final AuditService auditService;
     private final EventMapper eventMapper;
+    private final EmailService emailService;
+    private final UserService userService;
+    private final FeatureToggleService featureToggleService;
 
     public List<Event> getAllPublic(){
         log.debug("Retrieving all public events");
@@ -73,6 +77,12 @@ public class EventService {
 
         Event savedEvent = eventRepository.save(event);
         log.info("Event created with id: {}", savedEvent.getId());
+
+        if (featureToggleService.isEnabled(AppFeature.SEND_NEW_EVENT_NOTIFICATION_EMAIL.getUnleashKey())) {
+            userService.getAllAdmins().forEach(admin ->
+                emailService.sendNewEventWantsToBePublishedEmail(admin, savedEvent)
+            );
+        }
 
         return savedEvent;
     }

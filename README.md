@@ -25,6 +25,11 @@
   - [Log Levels and What They Mean](#log-levels-and-what-they-mean)
   - [Switching Between INFO and DEBUG](#switching-between-info-and-debug)
   - [How to Read Logs Quickly](#how-to-read-logs-quickly)
+- [Email Notifications](#email-notifications)
+  - [How It Works](#how-it-works)
+  - [Available Templates](#available-templates)
+  - [Trigger Points](#trigger-points)
+  - [Email Configuration](#email-configuration)
 - [Feature Flags (Unleash)](#feature-flags-unleash)
   - [How It Works in This Backend](#how-it-works-in-this-backend)
   - [Required Configuration](#required-configuration)
@@ -56,6 +61,8 @@ CochaVive is a platform for discovering and publishing public events in Cochabam
 | **JWT (JJWT)** | Stateless token generation and validation |
 | **Google API Client** | Verifies Google ID token on social login |
 | **Cloudinary** | Cloud image storage for event photos |
+| **Spring Mail (JavaMailSender)** | Outbound email delivery (SMTP) |
+| **Thymeleaf** | HTML template rendering for transactional emails |
 | **Unleash** | Feature flag management (enable/disable features without redeploy) |
 | **SpringDoc OpenAPI (Swagger UI)** | Auto-generated interactive API docs |
 | **Spring DevTools** | Hot reload during development — saves your `Ctrl+C / mvn run` sanity |
@@ -154,6 +161,8 @@ The app reads its sensitive configuration from environment variables — no hard
 | `JWT_SECRET_KEY` | Base64-encoded secret used to sign JWT tokens |
 | `JWT_EXPIRATION_TIME` | JWT lifetime in milliseconds (example: `86400000` for 24h) |
 | `GOOGLE_CLIENT_ID` | OAuth Client ID used to verify Google ID tokens |
+| `GMAIL_ADDRESS` | Sender mailbox used by SMTP (`spring.mail.username`) |
+| `GMAIL_APP_PASSWORD` | Gmail app password for SMTP authentication |
 | `APP_LOG_LEVEL` *(optional)* | App logger verbosity for backend services (`INFO` by default, use `DEBUG` for troubleshooting) |
 | `UNLEASH_API_TOKEN` | API token used by backend to fetch feature toggles from Unleash |
 
@@ -179,6 +188,8 @@ CLOUDINARY_API_SECRET=your_api_secret
 JWT_SECRET_KEY=your_base64_secret
 JWT_EXPIRATION_TIME=86400000
 GOOGLE_CLIENT_ID=your_google_client_id
+GMAIL_ADDRESS=your_sender@gmail.com
+GMAIL_APP_PASSWORD=your_gmail_app_password
 APP_LOG_LEVEL=INFO
 UNLEASH_API_TOKEN=your_unleash_api_token
 ```
@@ -215,6 +226,8 @@ Create or edit `.vscode/launch.json` in the project root:
         "JWT_SECRET_KEY": "your_base64_secret",
         "JWT_EXPIRATION_TIME": "86400000",
         "GOOGLE_CLIENT_ID": "your_google_client_id",
+        "GMAIL_ADDRESS": "your_sender@gmail.com",
+        "GMAIL_APP_PASSWORD": "your_gmail_app_password",
         "APP_LOG_LEVEL": "INFO",
         "UNLEASH_API_TOKEN": "your_unleash_api_token"
       }
@@ -241,6 +254,8 @@ export CLOUDINARY_API_SECRET=your_api_secret
 export JWT_SECRET_KEY=your_base64_secret
 export JWT_EXPIRATION_TIME=86400000
 export GOOGLE_CLIENT_ID=your_google_client_id
+export GMAIL_ADDRESS=your_sender@gmail.com
+export GMAIL_APP_PASSWORD=your_gmail_app_password
 export APP_LOG_LEVEL=INFO
 export UNLEASH_API_TOKEN=your_unleash_api_token
 
@@ -259,6 +274,8 @@ CLOUDINARY_API_SECRET=your_api_secret \
 JWT_SECRET_KEY=your_base64_secret \
 JWT_EXPIRATION_TIME=86400000 \
 GOOGLE_CLIENT_ID=your_google_client_id \
+GMAIL_ADDRESS=your_sender@gmail.com \
+GMAIL_APP_PASSWORD=your_gmail_app_password \
 APP_LOG_LEVEL=INFO \
 UNLEASH_API_TOKEN=your_unleash_api_token \
 ./mvnw spring-boot:run
@@ -276,6 +293,8 @@ set CLOUDINARY_API_SECRET=your_api_secret
 set JWT_SECRET_KEY=your_base64_secret
 set JWT_EXPIRATION_TIME=86400000
 set GOOGLE_CLIENT_ID=your_google_client_id
+set GMAIL_ADDRESS=your_sender@gmail.com
+set GMAIL_APP_PASSWORD=your_gmail_app_password
 set APP_LOG_LEVEL=INFO
 set UNLEASH_API_TOKEN=your_unleash_api_token
 mvnw.cmd spring-boot:run
@@ -517,6 +536,48 @@ Tip: If you are debugging authentication, start with `jwt-authentication-filter.
 
 ---
 
+## Email Notifications
+
+This backend includes an asynchronous email module for onboarding and moderation notifications.
+
+### How It Works
+
+- `EmailService` is the public contract used by business flows.
+- `EmailServiceImpl` renders HTML emails using Thymeleaf templates.
+- Sending is **asynchronous only** via `@Async("emailExecutor")`.
+- Every successful send is persisted in `EmailAuditLog` through `EmailAuditLogRepository`.
+- Delivery is best-effort by design: business flows continue even if SMTP delivery fails.
+
+### Available Templates
+
+Templates are located in `src/main/resources/templates/emails/`:
+
+- `welcome.html`
+- `new-event-wants-to-be-published.html`
+- `new-convert-to-publisher-request.html`
+
+`new-event-wants-to-be-published.html` also supports the event cover image (first non-empty URL from `event.photoLinks`).
+
+### Trigger Points
+
+- **Welcome email**: when a user is created through Google sign-in flow.
+- **New event notification**: when a publisher creates a new event; admins are notified.
+- **New publisher request notification**: when a user submits a publisher request; admins are notified.
+
+### Email Configuration
+
+Main config is in `application.yaml`:
+
+- `spring.mail.*` for SMTP (`host`, `port`, `username`, `password`, STARTTLS)
+- `app.email.from` for sender display name / from address
+
+Required env vars:
+
+- `GMAIL_ADDRESS`
+- `GMAIL_APP_PASSWORD`
+
+---
+
 ## Feature Flags (Unleash)
 
 This backend uses **Unleash** to turn features ON/OFF without redeploying. It is useful for gradual rollout, safe experimentation, and quickly disabling risky behavior in production.
@@ -526,12 +587,12 @@ This backend uses **Unleash** to turn features ON/OFF without redeploying. It is
 The current flow is:
 
 1. Feature keys are centralized in the `AppFeature` enum (often referred to by the team as `AppFeatures`).
-2. Endpoints are annotated with the custom `@FeatureFlag(AppFeature.XYZ)` annotation.
-3. `FeatureToggleAspect` (AOP) intercepts the request and checks the flag in Unleash.
-4. If enabled: request continues normally.
-5. If disabled: backend throws `FeatureDisabledException` and returns controlled error response.
+2. Endpoint-level feature checks can be done with `@FeatureFlag(AppFeature.XYZ)` annotation.
+3. `FeatureToggleAspect` (AOP) intercepts and checks Unleash flags.
+4. For internal business behaviors (like notifications), flow-level checks are done explicitly with `featureToggleService.isEnabled(...)`.
+5. If a protected endpoint flag is disabled: backend throws `FeatureDisabledException` and returns controlled error response.
 
-This keeps controller code clean and avoids repeating `if (flagEnabled)` checks in every endpoint.
+This keeps endpoint protection centralized while still allowing non-endpoint toggles where needed.
 
 ### Required Configuration
 
@@ -582,11 +643,21 @@ The backend currently defines:
 
 - `VIEW_UPCOMING_EVENTS` -> `view-upcoming-events`
 - `VIEW_FEATURED_EVENTS` -> `view-featured-events`
+- `MANAGE_PUBLISHER_REQUESTS` -> `manage-publisher-requests`
+- `SEND_WELCOME_EMAIL` -> `send-welcome-email`
+- `SEND_NEW_EVENT_NOTIFICATION_EMAIL` -> `send-new-event-notification-email`
+- `SEND_NEW_PUBLISHER_REQUEST_NOTIFICATION_EMAIL` -> `send-new-publisher-request-notification-email`
 
-These are used in event endpoints:
+Usage summary:
 
-- `GET /api/events/upcoming`
-- `GET /api/events/featured`
+- Endpoint gating (AOP):
+  - `GET /api/events/upcoming`
+  - `GET /api/events/featured`
+  - Publisher request admin moderation endpoints
+- Flow-level behavior gating:
+  - Welcome email sending
+  - New event admin notification email sending
+  - New publisher request admin notification email sending
 
 ### What Happens When a Flag Is OFF
 

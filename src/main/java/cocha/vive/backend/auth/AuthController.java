@@ -1,7 +1,10 @@
 package cocha.vive.backend.auth;
 
+import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.UserCreateDTO;
+import cocha.vive.backend.service.EmailService;
+import cocha.vive.backend.service.FeatureToggleService;
 import cocha.vive.backend.service.UserService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -31,6 +34,8 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtService jwtService;
+    private final EmailService emailService;
+    private final FeatureToggleService featureToggleService;
 
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> loginWithGoogle(@RequestBody TokenDto tokenDto) {
@@ -61,7 +66,11 @@ public class AuthController {
                     newUser.setName(name);
                     newUser.setFirstLastName(lastName);
                     newUser.setPhotoUrl(photoUrl);
-                    return userService.create(newUser);
+                    User createdUser = userService.create(newUser);
+                    if (featureToggleService.isEnabled(AppFeature.SEND_WELCOME_EMAIL.getUnleashKey())) {
+                        emailService.sendWelcomeEmail(createdUser);
+                    }
+                    return createdUser;
                 });
 
                 boolean requiresCI = (user.getDocumentNumber() == null || user.getDocumentNumber().trim().isEmpty());

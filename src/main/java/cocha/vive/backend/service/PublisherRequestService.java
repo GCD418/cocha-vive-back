@@ -1,5 +1,6 @@
 package cocha.vive.backend.service;
 
+import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.RequestStatus;
@@ -30,6 +31,9 @@ public class PublisherRequestService {
     private final CloudinaryService cloudinaryService;
     private final AuditService auditService;
     private final UserRepository userRepository;
+    private final UserService userService;
+    private final EmailService emailService;
+    private final FeatureToggleService featureToggleService;
 
     public List<PublisherRequestResponseDTO> getAll() {
         log.debug("Retrieving all publisher requests ordered by createdAt ASC");
@@ -104,6 +108,13 @@ public class PublisherRequestService {
         publisherRequest.setCreatedByUserId(actualUser);
         PublisherRequest savedRequest = publisherRequestRepository.save(publisherRequest);
         log.info("Publisher request created with id: {} by user id: {}", savedRequest.getId(), actualUserId);
+
+        if (featureToggleService.isEnabled(AppFeature.SEND_NEW_PUBLISHER_REQUEST_NOTIFICATION_EMAIL.getUnleashKey())) {
+            userService.getAllAdmins().forEach(admin ->
+                emailService.sendNewConvertToPublisherRequestEmail(admin, savedRequest)
+            );
+        }
+
         return publisherRequestMapper.toResponseDto(savedRequest);
     }
 
