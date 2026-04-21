@@ -1,7 +1,6 @@
 package cocha.vive.backend.exception;
 
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
-import cocha.vive.backend.exception.InvalidRoleTransitionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
