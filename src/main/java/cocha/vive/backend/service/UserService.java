@@ -68,4 +68,12 @@ public class UserService {
         log.debug("Retrieved actual user with id: {}", actualUser.getId());
         return actualUser;
     }
+
+    @Transactional(readOnly = true)
+    public List<User> getAllAdmins() {
+        log.debug("Retrieving all admin users");
+        List<User> admins = userRepository.findAllByRole("ROLE_ADMIN");
+        log.debug("Retrieved {} admin users", admins.size());
+        return admins;
+    }
 }

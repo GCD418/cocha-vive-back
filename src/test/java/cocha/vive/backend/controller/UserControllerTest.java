@@ -3,6 +3,7 @@ package cocha.vive.backend.controller;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.CompleteProfileDto;
 import cocha.vive.backend.model.dto.UserMeDTO;
+import cocha.vive.backend.model.mapper.UserMapper;
 import cocha.vive.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +35,9 @@ class UserControllerTest {
 
     @Mock
     private SecurityContext securityContext;
+
+    @Mock
+    private UserMapper userMapper;
 
     @InjectMocks
     private UserController userController;
@@ -117,7 +121,17 @@ class UserControllerTest {
         @DisplayName("200 – retorna UserMeDTO del usuario autenticado")
         void shouldReturn200WithUserMeDTO() {
             User user = buildUser();
+            UserMeDTO dto = new UserMeDTO(
+                1L,
+                "Gabriel",
+                "Perez",
+                "Quispe",
+                "gabriel.perez@example.com",
+                "https://example.com/photos/user-1.jpg",
+                "ROLE_USER"
+            );
             when(userService.getActualUser()).thenReturn(user);
+            when(userMapper.toMeDto(user)).thenReturn(dto);
 
             ResponseEntity<UserMeDTO> response = userController.getCurrentUser();
 
@@ -144,7 +158,17 @@ class UserControllerTest {
                 .role("ROLE_USER")
                 .isActive(true)
                 .build();
+            UserMeDTO dto = new UserMeDTO(
+                2L,
+                "Ana",
+                "Lopez",
+                null,
+                "ana.lopez@example.com",
+                null,
+                "ROLE_USER"
+            );
             when(userService.getActualUser()).thenReturn(user);
+            when(userMapper.toMeDto(user)).thenReturn(dto);
 
             ResponseEntity<UserMeDTO> response = userController.getCurrentUser();
 
@@ -156,11 +180,22 @@ class UserControllerTest {
         @Test
         @DisplayName("delega correctamente al servicio")
         void shouldDelegateToUserService() {
-            when(userService.getActualUser()).thenReturn(buildUser());
+            User user = buildUser();
+            when(userService.getActualUser()).thenReturn(user);
+            when(userMapper.toMeDto(user)).thenReturn(new UserMeDTO(
+                1L,
+                "Gabriel",
+                "Perez",
+                "Quispe",
+                "gabriel.perez@example.com",
+                "https://example.com/photos/user-1.jpg",
+                "ROLE_USER"
+            ));
 
             userController.getCurrentUser();
 
             verify(userService, times(1)).getActualUser();
+            verify(userMapper, times(1)).toMeDto(user);
         }
     }
 }

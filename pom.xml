@@ -145,10 +145,24 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Feature Flags -->
     <dependency>
       <groupId>io.getunleash</groupId>
       <artifactId>unleash-client-java</artifactId>
       <version>12.2.0</version>
+    </dependency>
+
+    <!-- Mail sending -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId></dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-aspects</artifactId>
     </dependency>
 
   </dependencies>
