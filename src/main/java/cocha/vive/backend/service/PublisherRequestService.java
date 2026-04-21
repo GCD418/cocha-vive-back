@@ -1,11 +1,13 @@
 package cocha.vive.backend.service;
 
 import cocha.vive.backend.core.enums.AppFeature;
+import cocha.vive.backend.exception.InvalidStateTransitionException;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.RequestStatus;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.PublisherRequestCreateDTO;
+import cocha.vive.backend.model.dto.PublisherRequestRejectDTO;
 import cocha.vive.backend.model.dto.PublisherRequestResponseDTO;
 import cocha.vive.backend.model.mapper.PublisherRequestMapper;
 import cocha.vive.backend.repository.PublisherRequestRepository;
@@ -35,7 +37,7 @@ public class PublisherRequestService {
     private final EmailService emailService;
     private final FeatureToggleService featureToggleService;
 
-    public List<PublisherRequestResponseDTO> getAll() {
+        public List<PublisherRequestResponseDTO> getAll() {
         log.debug("Retrieving all publisher requests ordered by createdAt ASC");
         List<PublisherRequest> requests = publisherRequestRepository.findAllByOrderByCreatedAtAsc();
         log.debug("Retrieved {} publisher request(s) ordered by createdAt ASC", requests.size());
@@ -119,16 +121,29 @@ public class PublisherRequestService {
     }
 
     @Transactional
-    public PublisherRequestResponseDTO rejectRequest(Long requestId) {
+    public PublisherRequestResponseDTO rejectRequest(Long requestId,  PublisherRequestRejectDTO dto) {
         Long actualUserId = auditService.getActualUserId();
         log.info("Rejecting publisher request with id: {} by admin id: {}", requestId, actualUserId);
 
         PublisherRequest request = getEntityById(requestId);
+
+        if (request.getRequestStatus() != RequestStatus.PENDING) {
+            log.warn("Cannot reject publisher request id: {} with status: {}", requestId, request.getRequestStatus());
+            throw new InvalidStateTransitionException(
+                "Only PENDING requests can be rejected. Current status: " + request.getRequestStatus()
+            );
+        }
+
         request.setRequestStatus(RequestStatus.REJECTED);
+        request.setRejectionReason(dto.getRejectionReason());
         request.setModifiedByUserId(actualUserId);
 
         PublisherRequest savedRequest = publisherRequestRepository.save(request);
         log.info("Publisher request rejected with id: {}", savedRequest.getId());
+
+        // TODO: notify affected user once notification system is available
+        // notificationService.notifyPublisherRequestRejected(savedRequest);
+
         return publisherRequestMapper.toResponseDto(savedRequest);
     }
 
