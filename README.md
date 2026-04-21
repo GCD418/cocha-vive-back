@@ -167,7 +167,7 @@ The app reads its sensitive configuration from environment variables — no hard
 | `UNLEASH_API_TOKEN` | API token used by backend to fetch feature toggles from Unleash |
 
 > **Where do I get the shared credentials (Cloudinary, JWT secret policy, team DB, etc.)?**
-> Contact the **CochaVive (Puy)** team. See [Contact](#contact) below.
+> Contact the **CochaVive** team. See [Contact](#contact) below.
 
 ---
 
