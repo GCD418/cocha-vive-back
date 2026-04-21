@@ -1,0 +1,38 @@
+name: Check-Reviews
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+  pull_request:
+    types: [opened, synchronized, reopened]
+
+jobs:
+  review-counter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify approvals
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const reviews = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            const approvals = reviews.data.filter(r => r.state === 'APPROVED');
+
+            const hasCollab = approvals.some(r =>
+              r.author_association === 'MEMBER' || r.author_association === 'OWNER' || r.author_association === 'COLLABORATOR'
+            );
+
+            const uniqueApprovers = new Set(approvals.map(r => r.user.login));
+            const totalApprovals = uniqueApprovers.size;
+
+            console.log(`Approved colaborator: ${hasCollab}`);
+            console.log(`Unique approvals total: ${totalApprovals}`);
+
+            if (hasCollab && totalApprovals >= 2) {
+              console.log("AWESOME, squash is comming");
+            } else {
+              core.setFailed(`Need more revisions: Requires a registered collaborator and somebody else. Actual: ${totalApprovals}/2 (Colab: ${hasCollab})`);
+            }
