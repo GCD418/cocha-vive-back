@@ -49,6 +49,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(InvalidStateTransitionException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInvalidStateTransition(InvalidStateTransitionException ex) {
+        ErrorResponseDTO error = ErrorResponseDTO.builder()
+            .status(HttpStatus.CONFLICT.value())
+            .code("INVALID_STATE_TRANSITION")
+            .message(ex.getMessage())
+            .timestamp(LocalDateTime.now())
+            .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGeneric(Exception ex) {
         ErrorResponseDTO error = ErrorResponseDTO.builder()
