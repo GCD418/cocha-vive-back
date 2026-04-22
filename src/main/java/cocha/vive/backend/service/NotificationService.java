@@ -2,6 +2,7 @@ package cocha.vive.backend.service;
 
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.Notification;
+import cocha.vive.backend.model.User;
 import cocha.vive.backend.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,16 @@ public class NotificationService {
         List<Notification> notifications = notificationRepository.findAllByUserIdOrderByCreatedAtAsc(actualUserId);
         log.debug("Retrieved {} notifications for user id: {}", notifications.size(), actualUserId);
         return notifications;
+    }
+
+    @Transactional
+    public Notification create(User recipient, String title, String shortDescription) {
+        Notification notification = Notification.builder()
+            .notifiedUser(recipient)
+            .title(title)
+            .shortDescription(shortDescription)
+            .build();
+        return notificationRepository.save(notification);
     }
 
     @Transactional
