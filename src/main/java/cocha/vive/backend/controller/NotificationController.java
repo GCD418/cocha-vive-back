@@ -24,6 +24,11 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getMyNotifications());
     }
 
+    @GetMapping("/unread-count")
+    public ResponseEntity<Long> getMyUnreadCount() {
+        return ResponseEntity.ok(notificationService.countMyUnreadNotifications());
+    }
+
     @PatchMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable("id") Long id) {
         notificationService.markAsRead(id);

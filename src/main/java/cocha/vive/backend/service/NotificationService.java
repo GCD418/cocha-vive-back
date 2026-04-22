@@ -49,4 +49,12 @@ public class NotificationService {
         int updated = notificationRepository.markAllAsReadByUserId(actualUserId);
         log.info("Marked {} notifications as read for user id: {}", updated, actualUserId);
     }
+
+    @Transactional(readOnly = true)
+    public long countMyUnreadNotifications() {
+        Long actualUserId = auditService.getActualUserId();
+        long unreadCount = notificationRepository.countUnreadByUserId(actualUserId);
+        log.debug("Unread notifications for user id {}: {}", actualUserId, unreadCount);
+        return unreadCount;
+    }
 }

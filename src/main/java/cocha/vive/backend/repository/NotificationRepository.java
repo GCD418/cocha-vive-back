@@ -38,4 +38,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
           AND unread = true
         """, nativeQuery = true)
     int markAllAsReadByUserId(@Param("userId") Long userId);
+
+    @Query(value = """
+        SELECT COUNT(*)
+        FROM notifications
+        WHERE notified_user = :userId
+          AND unread = true
+        """, nativeQuery = true)
+    long countUnreadByUserId(@Param("userId") Long userId);
 }

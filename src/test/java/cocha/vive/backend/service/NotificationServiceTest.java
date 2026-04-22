@@ -81,4 +81,17 @@ class NotificationServiceTest {
 
         verify(notificationRepository).markAllAsReadByUserId(userId);
     }
+
+    @Test
+    void countMyUnreadNotifications_shouldReturnUnreadCountForCurrentUser() {
+        Long userId = 20L;
+
+        when(auditService.getActualUserId()).thenReturn(userId);
+        when(notificationRepository.countUnreadByUserId(userId)).thenReturn(5L);
+
+        long result = notificationService.countMyUnreadNotifications();
+
+        assertThat(result).isEqualTo(5L);
+        verify(notificationRepository).countUnreadByUserId(userId);
+    }
 }

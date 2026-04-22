@@ -43,6 +43,17 @@ class NotificationControllerTest {
             assertThat(response.getBody()).hasSize(2);
             verify(notificationService).getMyNotifications();
         }
+
+        @Test
+        void shouldReturnUnreadCount() {
+            when(notificationService.countMyUnreadNotifications()).thenReturn(6L);
+
+            ResponseEntity<Long> response = notificationController.getMyUnreadCount();
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isEqualTo(6L);
+            verify(notificationService).countMyUnreadNotifications();
+        }
     }
 
     @Nested
