@@ -29,4 +29,10 @@ public class NotificationController {
         notificationService.markAsRead(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/read-all")
+    public ResponseEntity<Void> markAllAsRead() {
+        notificationService.markAllAsRead();
+        return ResponseEntity.noContent().build();
+    }
 }

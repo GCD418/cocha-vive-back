@@ -40,4 +40,13 @@ public class NotificationService {
 
         log.info("Notification id: {} marked as read for user id: {}", notificationId, actualUserId);
     }
+
+    @Transactional
+    public void markAllAsRead() {
+        Long actualUserId = auditService.getActualUserId();
+        log.info("Marking all unread notifications as read for user id: {}", actualUserId);
+
+        int updated = notificationRepository.markAllAsReadByUserId(actualUserId);
+        log.info("Marked {} notifications as read for user id: {}", updated, actualUserId);
+    }
 }

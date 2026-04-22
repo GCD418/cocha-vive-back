@@ -69,4 +69,16 @@ class NotificationServiceTest {
         assertThrows(ResourceNotFoundException.class,
             () -> notificationService.markAsRead(notificationId));
     }
+
+    @Test
+    void markAllAsRead_shouldUpdateAllUnreadNotificationsForCurrentUser() {
+        Long userId = 20L;
+
+        when(auditService.getActualUserId()).thenReturn(userId);
+        when(notificationRepository.markAllAsReadByUserId(userId)).thenReturn(3);
+
+        notificationService.markAllAsRead();
+
+        verify(notificationRepository).markAllAsReadByUserId(userId);
+    }
 }

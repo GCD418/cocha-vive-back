@@ -29,4 +29,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         """, nativeQuery = true)
     int markAsRead(@Param("notificationId") Long notificationId,
                    @Param("userId") Long userId);
+
+    @Modifying
+    @Query(value = """
+        UPDATE notifications
+        SET unread = false
+        WHERE notified_user = :userId
+          AND unread = true
+        """, nativeQuery = true)
+    int markAllAsReadByUserId(@Param("userId") Long userId);
 }

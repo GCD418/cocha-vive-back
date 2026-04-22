@@ -59,4 +59,19 @@ class NotificationControllerTest {
             verify(notificationService).markAsRead(7L);
         }
     }
+
+    @Nested
+    @DisplayName("PATCH /api/notifications/read-all")
+    class MarkAllAsRead {
+
+        @Test
+        void shouldReturnNoContent() {
+            doNothing().when(notificationService).markAllAsRead();
+
+            ResponseEntity<Void> response = notificationController.markAllAsRead();
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(notificationService).markAllAsRead();
+        }
+    }
 }
