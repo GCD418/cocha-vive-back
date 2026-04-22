@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notifications")
-@SQLRestriction("has_been_read = false")
+@SQLRestriction("unread = true")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Notification {
     @Id
@@ -30,8 +30,8 @@ public class Notification {
     private String shortDescription;
 
     @Builder.Default
-    @Column(name = "has_been_read", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean hasBeenRead = false;
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private Boolean unread = true;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
