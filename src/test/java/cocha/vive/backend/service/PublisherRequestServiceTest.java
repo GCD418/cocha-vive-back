@@ -5,11 +5,9 @@ import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.RequestStatus;
 import cocha.vive.backend.model.User;
-import cocha.vive.backend.model.Notification;
 import cocha.vive.backend.model.dto.PublisherRequestRejectDTO;
 import cocha.vive.backend.model.dto.PublisherRequestResponseDTO;
 import cocha.vive.backend.model.mapper.PublisherRequestMapper;
-import cocha.vive.backend.repository.NotificationRepository;
 import cocha.vive.backend.repository.PublisherRequestRepository;
 import cocha.vive.backend.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -51,7 +49,7 @@ public class PublisherRequestServiceTest {
     @Mock
     private FeatureToggleService featureToggleService;
     @Mock
-    private NotificationRepository notificationRepository;
+    private PublisherRequestUserNotificationFacade publisherRequestUserNotificationFacade;
 
     @InjectMocks
     private PublisherRequestService publisherRequestService;
@@ -123,7 +121,6 @@ public class PublisherRequestServiceTest {
             when(publisherRequestRepository.findById(1L)).thenReturn(Optional.of(request));
             when(publisherRequestRepository.save(any(PublisherRequest.class))).thenReturn(request);
             when(publisherRequestMapper.toResponseDto(any(PublisherRequest.class))).thenReturn(responseDTO);
-            when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
 
             PublisherRequestResponseDTO result = publisherRequestService.rejectRequest(1L, dto);
 
@@ -131,8 +128,7 @@ public class PublisherRequestServiceTest {
             assertThat(result.getRejectionReason())
                 .isEqualTo("The provided legal entity documentation is incomplete or invalid.");
             verify(publisherRequestRepository, times(1)).save(any(PublisherRequest.class));
-            verify(notificationRepository).save(any(Notification.class));
-            verify(emailService).sendPublisherRequestRejectedEmail(request.getCreatedByUserId(), request);
+            verify(publisherRequestUserNotificationFacade).notifyRejected(request.getCreatedByUserId(), request);
         }
 
         @Test
@@ -147,7 +143,6 @@ public class PublisherRequestServiceTest {
             when(publisherRequestMapper.toResponseDto(any())).thenReturn(
                 buildResponseDTO(RequestStatus.REJECTED, dto.getRejectionReason())
             );
-            when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
 
             publisherRequestService.rejectRequest(1L, dto);
 
@@ -157,12 +152,7 @@ public class PublisherRequestServiceTest {
                 .isEqualTo("The provided legal entity documentation is incomplete or invalid.");
             assertThat(captor.getValue().getRequestStatus()).isEqualTo(RequestStatus.REJECTED);
             assertThat(captor.getValue().getModifiedByUserId()).isEqualTo(99L);
-
-            ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
-            verify(notificationRepository).save(notificationCaptor.capture());
-            assertThat(notificationCaptor.getValue().getTitle()).isEqualTo("Solicitud rechazada");
-            assertThat(notificationCaptor.getValue().getShortDescription())
-                .isEqualTo("The provided legal entity documentation is incomplete or invalid.");
+            verify(publisherRequestUserNotificationFacade).notifyRejected(request.getCreatedByUserId(), request);
         }
 
         @Test
@@ -229,20 +219,13 @@ public class PublisherRequestServiceTest {
             when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
             when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
             when(publisherRequestRepository.save(any(PublisherRequest.class))).thenAnswer(i -> i.getArgument(0));
-            when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
             when(publisherRequestMapper.toResponseDto(any(PublisherRequest.class))).thenReturn(responseDTO);
 
             PublisherRequestResponseDTO result = publisherRequestService.approveRequest(1L);
 
             assertThat(result.getRequestStatus()).isEqualTo(RequestStatus.APPROVED);
             assertThat(owner.getRole()).isEqualTo("ROLE_PUBLISHER");
-
-            ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
-            verify(notificationRepository).save(notificationCaptor.capture());
-            assertThat(notificationCaptor.getValue().getTitle()).isEqualTo("Solicitud aprobada");
-            assertThat(notificationCaptor.getValue().getShortDescription()).isEqualTo("Now you're a Publisher");
-
-            verify(emailService).sendPublisherRequestApprovedEmail(owner, request);
+            verify(publisherRequestUserNotificationFacade).notifyApproved(owner, request);
         }
     }
 }

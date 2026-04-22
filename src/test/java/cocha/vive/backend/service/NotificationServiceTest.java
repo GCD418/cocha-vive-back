@@ -2,6 +2,7 @@ package cocha.vive.backend.service;
 
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.Notification;
+import cocha.vive.backend.model.User;
 import cocha.vive.backend.repository.NotificationRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,6 +69,20 @@ class NotificationServiceTest {
 
         assertThrows(ResourceNotFoundException.class,
             () -> notificationService.markAsRead(notificationId));
+    }
+
+    @Test
+    void create_shouldPersistNotification() {
+        User recipient = new User();
+        recipient.setId(20L);
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+
+        Notification result = notificationService.create(recipient, "Solicitud aprobada", "Now you're a Publisher");
+
+        assertThat(result.getNotifiedUser()).isEqualTo(recipient);
+        assertThat(result.getTitle()).isEqualTo("Solicitud aprobada");
+        assertThat(result.getShortDescription()).isEqualTo("Now you're a Publisher");
+        verify(notificationRepository).save(any(Notification.class));
     }
 
     @Test
