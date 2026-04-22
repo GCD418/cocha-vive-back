@@ -6,11 +6,13 @@ import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.RequestStatus;
 import cocha.vive.backend.model.User;
+import cocha.vive.backend.model.Notification;
 import cocha.vive.backend.model.dto.PublisherRequestCreateDTO;
 import cocha.vive.backend.model.dto.PublisherRequestRejectDTO;
 import cocha.vive.backend.model.dto.PublisherRequestResponseDTO;
 import cocha.vive.backend.model.mapper.PublisherRequestMapper;
 import cocha.vive.backend.repository.PublisherRequestRepository;
+import cocha.vive.backend.repository.NotificationRepository;
 import cocha.vive.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,7 @@ public class PublisherRequestService {
     private final UserService userService;
     private final EmailService emailService;
     private final FeatureToggleService featureToggleService;
+    private final NotificationRepository notificationRepository;
 
         public List<PublisherRequestResponseDTO> getAll() {
         log.debug("Retrieving all publisher requests ordered by createdAt ASC");
@@ -141,8 +144,13 @@ public class PublisherRequestService {
         PublisherRequest savedRequest = publisherRequestRepository.save(request);
         log.info("Publisher request rejected with id: {}", savedRequest.getId());
 
-        // TODO: notify affected user once notification system is available
-        // notificationService.notifyPublisherRequestRejected(savedRequest);
+        User affectedUser = savedRequest.getCreatedByUserId();
+        createNotification(
+            affectedUser,
+            "Solicitud rechazada",
+            savedRequest.getRejectionReason()
+        );
+        emailService.sendPublisherRequestRejectedEmail(affectedUser, savedRequest);
 
         return publisherRequestMapper.toResponseDto(savedRequest);
     }
@@ -168,6 +176,23 @@ public class PublisherRequestService {
         PublisherRequest savedRequest = publisherRequestRepository.save(request);
         log.info("Publisher request approved with id: {} and user id: {} promoted to {}",
             savedRequest.getId(), requestOwner.getId(), ROLE_PUBLISHER);
+
+        createNotification(
+            requestOwner,
+            "Solicitud aprobada",
+            "Now you're a Publisher"
+        );
+        emailService.sendPublisherRequestApprovedEmail(requestOwner, savedRequest);
+
         return publisherRequestMapper.toResponseDto(savedRequest);
+    }
+
+    private void createNotification(User recipient, String title, String shortDescription) {
+        Notification notification = Notification.builder()
+            .notifiedUser(recipient)
+            .title(title)
+            .shortDescription(shortDescription)
+            .build();
+        notificationRepository.save(notification);
     }
 }

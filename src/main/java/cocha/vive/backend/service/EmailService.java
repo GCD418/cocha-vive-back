@@ -13,5 +13,9 @@ public interface EmailService {
 
     void sendNewConvertToPublisherRequestEmail(User adminRecipient, PublisherRequest publisherRequest);
 
+    void sendPublisherRequestApprovedEmail(User recipientUser, PublisherRequest publisherRequest);
+
+    void sendPublisherRequestRejectedEmail(User recipientUser, PublisherRequest publisherRequest);
+
     void sendCustomEmail(EmailRequest request, String templateName, User createdByUser);
 }
