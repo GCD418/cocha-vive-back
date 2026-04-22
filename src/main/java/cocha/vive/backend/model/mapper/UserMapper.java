@@ -12,5 +12,6 @@ public interface UserMapper {
     @Mapping(target = "names", source = "name")
     User toEntity(UserCreateDTO dto);
 
+    @Mapping(target = "createdAt", source = "createdAt")
     UserMeDTO toMeDto(User user);
 }

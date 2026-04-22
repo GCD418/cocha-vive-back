@@ -50,4 +50,5 @@ public class UserController {
     public ResponseEntity<UserMeDTO> getCurrentUser() {
         return ResponseEntity.ok(userMapper.toMeDto(userService.getActualUser()));
     }
+
 }

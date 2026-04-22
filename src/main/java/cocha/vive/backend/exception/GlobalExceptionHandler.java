@@ -33,6 +33,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(InvalidRoleTransitionException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInvalidRoleTransition(InvalidRoleTransitionException ex) {
+        ErrorResponseDTO error = ErrorResponseDTO.builder()
+            .status(HttpStatus.BAD_REQUEST.value())
+            .code("INVALID_ROLE_TRANSITION")
+            .message(ex.getMessage())
+            .timestamp(LocalDateTime.now())
+            .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()

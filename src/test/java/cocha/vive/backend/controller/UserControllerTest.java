@@ -128,7 +128,8 @@ class UserControllerTest {
                 "Quispe",
                 "gabriel.perez@example.com",
                 "https://example.com/photos/user-1.jpg",
-                "ROLE_USER"
+                "ROLE_USER",
+                null
             );
             when(userService.getActualUser()).thenReturn(user);
             when(userMapper.toMeDto(user)).thenReturn(dto);
@@ -165,7 +166,8 @@ class UserControllerTest {
                 null,
                 "ana.lopez@example.com",
                 null,
-                "ROLE_USER"
+                "ROLE_USER",
+                null
             );
             when(userService.getActualUser()).thenReturn(user);
             when(userMapper.toMeDto(user)).thenReturn(dto);
@@ -189,7 +191,8 @@ class UserControllerTest {
                 "Quispe",
                 "gabriel.perez@example.com",
                 "https://example.com/photos/user-1.jpg",
-                "ROLE_USER"
+                "ROLE_USER",
+                null
             ));
 
             userController.getCurrentUser();

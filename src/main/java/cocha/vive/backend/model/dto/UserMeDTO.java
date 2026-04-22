@@ -1,6 +1,7 @@
 package cocha.vive.backend.model.dto;
 
 import cocha.vive.backend.model.User;
+import java.time.LocalDateTime;
 
 public record UserMeDTO(
     Long id,
@@ -9,7 +10,8 @@ public record UserMeDTO(
     String secondLastName,
     String email,
     String photoUrl,
-    String role
+    String role,
+    LocalDateTime createdAt
 ) {
     public UserMeDTO(User user) {
         this(
@@ -19,7 +21,8 @@ public record UserMeDTO(
             user.getSecondLastName(),
             user.getEmail(),
             user.getPhotoUrl(),
-            user.getRole()
+            user.getRole(),
+            user.getCreatedAt()
         );
     }
 }
