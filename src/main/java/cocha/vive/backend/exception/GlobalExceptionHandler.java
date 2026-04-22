@@ -3,6 +3,7 @@ package cocha.vive.backend.exception;
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -44,6 +45,17 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.BAD_REQUEST.value())
             .code("VALIDATION_ERROR")
             .message(message)
+            .timestamp(LocalDateTime.now())
+            .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleNotReadable(HttpMessageNotReadableException ex) {
+        ErrorResponseDTO error = ErrorResponseDTO.builder()
+            .status(HttpStatus.BAD_REQUEST.value())
+            .code("VALIDATION_ERROR")
+            .message("Request body is missing or malformed")
             .timestamp(LocalDateTime.now())
             .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
