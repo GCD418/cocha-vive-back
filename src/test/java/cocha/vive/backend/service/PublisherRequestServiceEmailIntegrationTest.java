@@ -69,7 +69,7 @@ class PublisherRequestServiceEmailIntegrationTest {
         saved.setRequestReason("Motivo");
 
         PublisherRequestResponseDTO responseDTO = new PublisherRequestResponseDTO(
-            1L, "Motivo", "Entidad", List.of(), null, null, null, null, true, null
+            1L, "Motivo", "Entidad", null, List.of(), null, null, null, null, true, null
         );
 
         when(auditService.getActualUserId()).thenReturn(userId);
@@ -102,7 +102,7 @@ class PublisherRequestServiceEmailIntegrationTest {
         saved.setCreatedByUserId(requester);
 
         PublisherRequestResponseDTO responseDTO = new PublisherRequestResponseDTO(
-            1L, "Motivo", "Entidad", List.of(), null, null, null, null, true, null
+            1L, "Motivo", "Entidad", null, List.of(), null, null, null, null, true, null
         );
 
         when(auditService.getActualUserId()).thenReturn(userId);

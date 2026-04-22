@@ -3,8 +3,11 @@ package cocha.vive.backend.controller;
 import cocha.vive.backend.core.annotations.FeatureFlag;
 import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.dto.PublisherRequestCreateDTO;
+import cocha.vive.backend.model.dto.PublisherRequestRejectDTO;
 import cocha.vive.backend.model.dto.PublisherRequestResponseDTO;
 import cocha.vive.backend.service.PublisherRequestService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -57,8 +60,21 @@ public class PublisherRequestController {
         return ResponseEntity.ok(publisherRequestService.approveRequest(id));
     }
 
+    @Operation(
+        summary = "Reject a publisher request",
+        description = "Rejects a pending publisher request with a mandatory rejection reason.",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Request rejected successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid or missing rejection reason"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Publisher request not found"),
+            @ApiResponse(responseCode = "409", description = "Request is not in PENDING state")
+        }
+    )
     @PatchMapping("/{id}/reject")
-    public ResponseEntity<PublisherRequestResponseDTO> rejectRequest(@PathVariable Long id) {
-        return ResponseEntity.ok(publisherRequestService.rejectRequest(id));
+    public ResponseEntity<PublisherRequestResponseDTO> rejectRequest(
+        @PathVariable Long id,
+        @Valid @RequestBody PublisherRequestRejectDTO dto) {
+        return ResponseEntity.ok(publisherRequestService.rejectRequest(id, dto));
     }
 }

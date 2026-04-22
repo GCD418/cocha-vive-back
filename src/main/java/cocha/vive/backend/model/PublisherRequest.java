@@ -32,6 +32,9 @@ public class PublisherRequest {
     @Column(name = "legal-entity-name", nullable = false, columnDefinition = "TEXT")
     private String legalEntityName;
 
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @Array(length = 10)
     @Column(name = "evidence-images", nullable = false, columnDefinition = "text[]")
     private List<String> evidenceImages;
