@@ -6,11 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notifications")
+@SQLRestriction("has_been_read = false")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Notification {
     @Id
