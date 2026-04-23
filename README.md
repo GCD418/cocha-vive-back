@@ -30,6 +30,8 @@
   - [Available Templates](#available-templates)
   - [Trigger Points](#trigger-points)
   - [Email Configuration](#email-configuration)
+- [In-App Notifications](#in-app-notifications)
+  - [Endpoints](#endpoints)
 - [Feature Flags (Unleash)](#feature-flags-unleash)
   - [How It Works in This Backend](#how-it-works-in-this-backend)
   - [Required Configuration](#required-configuration)
@@ -578,6 +580,29 @@ Required env vars:
 
 ---
 
+## In-App Notifications
+
+The backend exposes notification endpoints for the **current authenticated user**.
+
+### Endpoints
+
+- `GET /api/notifications`
+  - Returns unread notifications only.
+  - Sorted by `createdAt` ascending (oldest first).
+
+- `GET /api/notifications/unread-count`
+  - Returns unread notifications count (`Long`).
+
+- `PATCH /api/notifications/{id}/read`
+  - Marks one notification as read.
+  - Returns `204 No Content`.
+
+- `PATCH /api/notifications/read-all`
+  - Marks all unread notifications as read for current user.
+  - Returns `204 No Content`.
+
+---
+
 ## Feature Flags (Unleash)
 
 This backend uses **Unleash** to turn features ON/OFF without redeploying. It is useful for gradual rollout, safe experimentation, and quickly disabling risky behavior in production.
@@ -647,6 +672,7 @@ The backend currently defines:
 - `SEND_WELCOME_EMAIL` -> `send-welcome-email`
 - `SEND_NEW_EVENT_NOTIFICATION_EMAIL` -> `send-new-event-notification-email`
 - `SEND_NEW_PUBLISHER_REQUEST_NOTIFICATION_EMAIL` -> `send-new-publisher-request-notification-email`
+- `NOTIFY_TO_USER_OF_PUBLISHER_REQUEST_CHANGES` -> `notify-to-user-of-publisher-request-changes`
 
 Usage summary:
 
@@ -658,6 +684,7 @@ Usage summary:
   - Welcome email sending
   - New event admin notification email sending
   - New publisher request admin notification email sending
+  - Publisher request decision communications to end user (in-app notification + email)
 
 ### What Happens When a Flag Is OFF
 
