@@ -1,5 +1,6 @@
 package cocha.vive.backend.service;
 
+import cocha.vive.backend.config.PublisherRequestNotificationProperties;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.User;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +25,9 @@ class PublisherRequestUserNotificationFacadeTest {
     @Mock
     private FeatureToggleService featureToggleService;
 
+    @Mock
+    private PublisherRequestNotificationProperties publisherRequestNotificationProperties;
+
     @InjectMocks
     private PublisherRequestUserNotificationFacade facade;
 
@@ -33,10 +37,12 @@ class PublisherRequestUserNotificationFacadeTest {
         PublisherRequest request = request("Entidad", null);
 
         when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(true);
+        when(publisherRequestNotificationProperties.getApprovedTitle()).thenReturn("Publisher request approved");
+        when(publisherRequestNotificationProperties.getApprovedDescription()).thenReturn("Now you're a Publisher");
 
         facade.notifyApproved(recipient, request);
 
-        verify(notificationService).create(recipient, "Solicitud aprobada", "Now you're a Publisher");
+        verify(notificationService).create(recipient, "Publisher request approved", "Now you're a Publisher");
         verify(emailService).sendPublisherRequestApprovedEmail(recipient, request);
     }
 
@@ -59,10 +65,11 @@ class PublisherRequestUserNotificationFacadeTest {
         PublisherRequest request = request("Entidad", "Motivo de rechazo");
 
         when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(true);
+        when(publisherRequestNotificationProperties.getRejectedTitle()).thenReturn("Publisher request rejected");
 
         facade.notifyRejected(recipient, request);
 
-        verify(notificationService).create(recipient, "Solicitud rechazada", "Motivo de rechazo");
+        verify(notificationService).create(recipient, "Publisher request rejected", "Motivo de rechazo");
         verify(emailService).sendPublisherRequestRejectedEmail(recipient, request);
     }
 
