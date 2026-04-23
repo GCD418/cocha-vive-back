@@ -1,5 +1,6 @@
 package cocha.vive.backend.service;
 
+import cocha.vive.backend.config.PublisherRequestNotificationProperties;
 import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.User;
@@ -12,13 +13,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PublisherRequestUserNotificationFacade {
 
-    private static final String APPROVED_TITLE = "Solicitud aprobada";
-    private static final String APPROVED_DESCRIPTION = "Now you're a Publisher";
-    private static final String REJECTED_TITLE = "Solicitud rechazada";
-
     private final NotificationService notificationService;
     private final EmailService emailService;
     private final FeatureToggleService featureToggleService;
+    private final PublisherRequestNotificationProperties publisherRequestNotificationProperties;
 
     public void notifyApproved(User recipientUser, PublisherRequest publisherRequest) {
         if (!isEnabled()) {
@@ -27,7 +25,11 @@ public class PublisherRequestUserNotificationFacade {
             return;
         }
 
-        notificationService.create(recipientUser, APPROVED_TITLE, APPROVED_DESCRIPTION);
+        notificationService.create(
+            recipientUser,
+            publisherRequestNotificationProperties.getApprovedTitle(),
+            publisherRequestNotificationProperties.getApprovedDescription()
+        );
         emailService.sendPublisherRequestApprovedEmail(recipientUser, publisherRequest);
     }
 
@@ -38,7 +40,11 @@ public class PublisherRequestUserNotificationFacade {
             return;
         }
 
-        notificationService.create(recipientUser, REJECTED_TITLE, publisherRequest.getRejectionReason());
+        notificationService.create(
+            recipientUser,
+            publisherRequestNotificationProperties.getRejectedTitle(),
+            publisherRequest.getRejectionReason()
+        );
         emailService.sendPublisherRequestRejectedEmail(recipientUser, publisherRequest);
     }
 
