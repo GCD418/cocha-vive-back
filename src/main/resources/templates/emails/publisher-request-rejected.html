@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Solicitud rechazada</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#222;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f6f8;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e9edf2;">
+                <tr>
+                    <td style="background:linear-gradient(135deg,#6a1f1f 0%,#b73a3a 100%);padding:28px 32px;color:#ffffff;">
+                        <h1 style="margin:0;font-size:22px;line-height:1.2;">Solicitud rechazada</h1>
+                        <p style="margin:10px 0 0;font-size:14px;opacity:0.95;">Puedes volver a enviar una nueva solicitud luego de un tiempo de espera</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:28px 32px;">
+                        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#3a4754;">
+                            Hola <strong th:text="${userName}">Usuario</strong>,
+                        </p>
+                        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#3a4754;">
+                            Tu solicitud para convertirte en publisher fue rechazada.
+                        </p>
+                        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#3a4754;">
+                            Entidad legal: <strong th:text="${legalEntityName}">Entidad</strong>
+                        </p>
+
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fff5f5;border:1px solid #ffd9d9;border-radius:10px;">
+                            <tr>
+                                <td style="padding:14px 16px;">
+                                    <p style="margin:0;font-size:14px;line-height:1.6;color:#7a2f2f;">
+                                        <strong>Motivo de rechazo:</strong>
+                                        <span th:text="${rejectionReason}">Detalle del motivo</span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:18px 32px 28px;background:#f8fafc;border-top:1px solid #e9edf2;">
+                        <p style="margin:0;font-size:12px;color:#6b7785;line-height:1.6;">
+                            Notificación automática de CochaVive.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -36,6 +36,7 @@ public class PublisherRequestService {
     private final UserService userService;
     private final EmailService emailService;
     private final FeatureToggleService featureToggleService;
+    private final PublisherRequestUserNotificationFacade publisherRequestUserNotificationFacade;
 
         public List<PublisherRequestResponseDTO> getAll() {
         log.debug("Retrieving all publisher requests ordered by createdAt ASC");
@@ -141,8 +142,8 @@ public class PublisherRequestService {
         PublisherRequest savedRequest = publisherRequestRepository.save(request);
         log.info("Publisher request rejected with id: {}", savedRequest.getId());
 
-        // TODO: notify affected user once notification system is available
-        // notificationService.notifyPublisherRequestRejected(savedRequest);
+        User affectedUser = savedRequest.getCreatedByUserId();
+        publisherRequestUserNotificationFacade.notifyRejected(affectedUser, savedRequest);
 
         return publisherRequestMapper.toResponseDto(savedRequest);
     }
@@ -168,6 +169,9 @@ public class PublisherRequestService {
         PublisherRequest savedRequest = publisherRequestRepository.save(request);
         log.info("Publisher request approved with id: {} and user id: {} promoted to {}",
             savedRequest.getId(), requestOwner.getId(), ROLE_PUBLISHER);
+
+        publisherRequestUserNotificationFacade.notifyApproved(requestOwner, savedRequest);
+
         return publisherRequestMapper.toResponseDto(savedRequest);
     }
 }

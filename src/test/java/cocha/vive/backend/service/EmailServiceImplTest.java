@@ -188,6 +188,52 @@ class EmailServiceImplTest {
     }
 
     @Test
+    @DisplayName("sendPublisherRequestApprovedEmail should fill expected variables")
+    void sendPublisherRequestApprovedEmail_shouldFillExpectedVariables() {
+        User recipient = user(9L, "María", "Sosa", "maria@mail.com", "ROLE_USER");
+        PublisherRequest publisherRequest = new PublisherRequest();
+        publisherRequest.setLegalEntityName("Cocha Cultura SRL");
+
+        when(appEmailProperties.getFrom()).thenReturn("no-reply@cochavive.com");
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        when(templateEngine.process(eq("emails/publisher-request-approved"), any(Context.class)))
+            .thenReturn("<html>approved</html>");
+
+        emailService.sendPublisherRequestApprovedEmail(recipient, publisherRequest);
+
+        ArgumentCaptor<Context> contextCaptor = ArgumentCaptor.forClass(Context.class);
+        verify(templateEngine).process(eq("emails/publisher-request-approved"), contextCaptor.capture());
+        Context context = contextCaptor.getValue();
+
+        assertThat(context.getVariable("userName")).isEqualTo("María Sosa");
+        assertThat(context.getVariable("legalEntityName")).isEqualTo("Cocha Cultura SRL");
+    }
+
+    @Test
+    @DisplayName("sendPublisherRequestRejectedEmail should fill expected variables")
+    void sendPublisherRequestRejectedEmail_shouldFillExpectedVariables() {
+        User recipient = user(9L, "María", "Sosa", "maria@mail.com", "ROLE_USER");
+        PublisherRequest publisherRequest = new PublisherRequest();
+        publisherRequest.setLegalEntityName("Cocha Cultura SRL");
+        publisherRequest.setRejectionReason("Documentación incompleta");
+
+        when(appEmailProperties.getFrom()).thenReturn("no-reply@cochavive.com");
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        when(templateEngine.process(eq("emails/publisher-request-rejected"), any(Context.class)))
+            .thenReturn("<html>rejected</html>");
+
+        emailService.sendPublisherRequestRejectedEmail(recipient, publisherRequest);
+
+        ArgumentCaptor<Context> contextCaptor = ArgumentCaptor.forClass(Context.class);
+        verify(templateEngine).process(eq("emails/publisher-request-rejected"), contextCaptor.capture());
+        Context context = contextCaptor.getValue();
+
+        assertThat(context.getVariable("userName")).isEqualTo("María Sosa");
+        assertThat(context.getVariable("legalEntityName")).isEqualTo("Cocha Cultura SRL");
+        assertThat(context.getVariable("rejectionReason")).isEqualTo("Documentación incompleta");
+    }
+
+    @Test
     @DisplayName("sendNewEventWantsToBePublishedEmail should set null cover image when event has no photos")
     void sendNewEventWantsToBePublishedEmail_shouldSetNullCoverImageWhenNoPhotos() {
         User admin = user(1L, "Admin", "Uno", "admin@mail.com", "ROLE_ADMIN");

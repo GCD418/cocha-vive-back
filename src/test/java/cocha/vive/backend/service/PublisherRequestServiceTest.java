@@ -48,6 +48,8 @@ public class PublisherRequestServiceTest {
     private CloudinaryService cloudinaryService;
     @Mock
     private FeatureToggleService featureToggleService;
+    @Mock
+    private PublisherRequestUserNotificationFacade publisherRequestUserNotificationFacade;
 
     @InjectMocks
     private PublisherRequestService publisherRequestService;
@@ -126,6 +128,7 @@ public class PublisherRequestServiceTest {
             assertThat(result.getRejectionReason())
                 .isEqualTo("The provided legal entity documentation is incomplete or invalid.");
             verify(publisherRequestRepository, times(1)).save(any(PublisherRequest.class));
+            verify(publisherRequestUserNotificationFacade).notifyRejected(request.getCreatedByUserId(), request);
         }
 
         @Test
@@ -149,6 +152,7 @@ public class PublisherRequestServiceTest {
                 .isEqualTo("The provided legal entity documentation is incomplete or invalid.");
             assertThat(captor.getValue().getRequestStatus()).isEqualTo(RequestStatus.REJECTED);
             assertThat(captor.getValue().getModifiedByUserId()).isEqualTo(99L);
+            verify(publisherRequestUserNotificationFacade).notifyRejected(request.getCreatedByUserId(), request);
         }
 
         @Test
@@ -193,6 +197,35 @@ public class PublisherRequestServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class);
 
             verify(publisherRequestRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("approveRequest")
+    class ApproveRequest {
+
+        @Test
+        @DisplayName("aprueba solicitud PENDING, promueve usuario y notifica por app/email")
+        void shouldApprovePendingRequestPromoteUserAndNotify() {
+            User owner = buildUser();
+            owner.setRole("ROLE_USER");
+            PublisherRequest request = buildRequest(RequestStatus.PENDING);
+            request.setCreatedByUserId(owner);
+
+            PublisherRequestResponseDTO responseDTO = buildResponseDTO(RequestStatus.APPROVED, null);
+
+            when(auditService.getActualUserId()).thenReturn(99L);
+            when(publisherRequestRepository.findById(1L)).thenReturn(Optional.of(request));
+            when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+            when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+            when(publisherRequestRepository.save(any(PublisherRequest.class))).thenAnswer(i -> i.getArgument(0));
+            when(publisherRequestMapper.toResponseDto(any(PublisherRequest.class))).thenReturn(responseDTO);
+
+            PublisherRequestResponseDTO result = publisherRequestService.approveRequest(1L);
+
+            assertThat(result.getRequestStatus()).isEqualTo(RequestStatus.APPROVED);
+            assertThat(owner.getRole()).isEqualTo("ROLE_PUBLISHER");
+            verify(publisherRequestUserNotificationFacade).notifyApproved(owner, request);
         }
     }
 }

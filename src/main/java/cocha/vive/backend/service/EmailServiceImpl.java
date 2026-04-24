@@ -36,6 +36,8 @@ public class EmailServiceImpl implements EmailService {
     private static final String TEMPLATE_WELCOME = "emails/welcome";
     private static final String TEMPLATE_NEW_EVENT_TO_PUBLISH = "emails/new-event-wants-to-be-published";
     private static final String TEMPLATE_NEW_PUBLISHER_REQUEST = "emails/new-convert-to-publisher-request";
+    private static final String TEMPLATE_PUBLISHER_REQUEST_APPROVED = "emails/publisher-request-approved";
+    private static final String TEMPLATE_PUBLISHER_REQUEST_REJECTED = "emails/publisher-request-rejected";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final JavaMailSender mailSender;
@@ -107,6 +109,47 @@ public class EmailServiceImpl implements EmailService {
         );
 
         sendTemplatedEmail(request, TEMPLATE_NEW_PUBLISHER_REQUEST, variables, publisherRequest.getCreatedByUserId());
+    }
+
+    @Override
+    @Async("emailExecutor")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void sendPublisherRequestApprovedEmail(User recipientUser, PublisherRequest publisherRequest) {
+        Objects.requireNonNull(recipientUser, "recipientUser must not be null");
+        Objects.requireNonNull(publisherRequest, "publisherRequest must not be null");
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("userName", resolveUserDisplayName(recipientUser));
+        variables.put("legalEntityName", publisherRequest.getLegalEntityName());
+
+        EmailRequest request = new EmailRequest(
+            recipientUser.getEmail(),
+            "Solicitud aprobada",
+            ""
+        );
+
+        sendTemplatedEmail(request, TEMPLATE_PUBLISHER_REQUEST_APPROVED, variables, recipientUser);
+    }
+
+    @Override
+    @Async("emailExecutor")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void sendPublisherRequestRejectedEmail(User recipientUser, PublisherRequest publisherRequest) {
+        Objects.requireNonNull(recipientUser, "recipientUser must not be null");
+        Objects.requireNonNull(publisherRequest, "publisherRequest must not be null");
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("userName", resolveUserDisplayName(recipientUser));
+        variables.put("legalEntityName", publisherRequest.getLegalEntityName());
+        variables.put("rejectionReason", publisherRequest.getRejectionReason());
+
+        EmailRequest request = new EmailRequest(
+            recipientUser.getEmail(),
+            "Solicitud rechazada",
+            ""
+        );
+
+        sendTemplatedEmail(request, TEMPLATE_PUBLISHER_REQUEST_REJECTED, variables, recipientUser);
     }
 
     @Override
