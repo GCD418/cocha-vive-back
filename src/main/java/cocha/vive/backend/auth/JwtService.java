@@ -82,4 +82,38 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+    public String generateTokenWithExpiration(
+            Map<String, Object> claims,
+            User user,
+            long expirationSeconds) {
+        log.debug("Generating JWT token with custom expiration");
+
+        String subject = user != null ? user.getEmail() : "temporary";
+
+        return Jwts.builder()
+            .claims(claims)
+            .subject(subject)
+            .issuedAt(new Date(System.currentTimeMillis()))
+            .expiration(new Date(System.currentTimeMillis() + expirationSeconds * 1000))
+            .signWith(getSignInKey())
+            .compact();
+    }
+
+    public Map<String, Object> extractAllClaimsAsMap(String token) {
+        log.debug("Extracting all claims from JWT token");
+
+        Claims claims = Jwts.parser()
+            .verifyWith(getSignInKey())
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
+
+        return claims.entrySet()
+            .stream()
+            .collect(java.util.stream.Collectors.toMap(
+                java.util.Map.Entry::getKey,
+                java.util.Map.Entry::getValue
+            ));
+    }
 }
