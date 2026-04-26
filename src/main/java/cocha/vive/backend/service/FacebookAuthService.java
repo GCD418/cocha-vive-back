@@ -51,11 +51,11 @@ public class FacebookAuthService {
 
             String internalToken = jwtService.generateToken(extraClaims, user);
 
-            return new FacebookAuthResponse(
-                "AUTHENTICATED",
-                internalToken,
-                false
-            );
+            return FacebookAuthResponse.builder()
+            .status("AUTHENTICATED")
+            .internalToken(internalToken)
+            .requiresOnboarding(false)
+            .build();
         }
 
         log.info("New Facebook user/page - generating temporary registration token");
@@ -74,12 +74,12 @@ public class FacebookAuthService {
         String registrationToken = jwtService
             .generateTokenWithExpiration(claims, null, 86400);  // 24 horas
 
-        return new FacebookAuthResponse(
-            "PENDING_EMAIL_REGISTRATION",
-            registrationToken,
-            payload.getName(),
-            payload.getPictureUrl()
-        );
+        return FacebookAuthResponse.builder()
+        .status("PENDING_EMAIL_REGISTRATION")
+        .registrationToken(registrationToken)
+        .facebookName(payload.getName())
+        .facebookPhotoUrl(payload.getPictureUrl())
+        .build();
     }
 
     @Transactional

@@ -1,6 +1,9 @@
 package cocha.vive.backend.controller;
 
+import cocha.vive.backend.auth.AuthResponse;
+import cocha.vive.backend.auth.FacebookAuthResponse;
 import cocha.vive.backend.auth.TokenDto;
+import cocha.vive.backend.auth.RegisterEmailRequest;
 import cocha.vive.backend.service.FacebookAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -41,34 +44,34 @@ public class FacebookAuthController {
             log.error("Facebook authentication error", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
 
-        @PostMapping("/register-email")
-        public ResponseEntity<Void> registerEmail(
-                @RequestBody RegisterEmailRequest request) {
+    @PostMapping("/register-email")
+    public ResponseEntity<Void> registerEmail(
+            @RequestBody RegisterEmailRequest request) {
 
-            if (request == null || request.getRegistrationToken() == null ||
-                request.getEmail() == null) {
-                log.warn("Missing required fields for email registration");
-                return ResponseEntity.badRequest().build();
-            }
+        if (request == null || request.getRegistrationToken() == null ||
+            request.getEmail() == null) {
+            log.warn("Missing required fields for email registration");
+            return ResponseEntity.badRequest().build();
+        }
 
-            try {
-                facebookAuthService.registerEmail(
-                    request.getRegistrationToken(),
-                    request.getEmail()
-                );
+        try {
+            facebookAuthService.registerEmail(
+                request.getRegistrationToken(),
+                request.getEmail()
+            );
 
-                log.info("Email registered successfully");
-                return ResponseEntity.ok().build();
+            log.info("Email registered successfully");
+            return ResponseEntity.ok().build();
 
-            } catch (IllegalArgumentException e) {
-                log.warn("Email registration validation error: {}", e.getMessage());
-                return ResponseEntity.badRequest().build();
+        } catch (IllegalArgumentException e) {
+            log.warn("Email registration validation error: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
 
-            } catch (Exception e) {
-                log.error("Email registration error", e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
+        } catch (Exception e) {
+            log.error("Email registration error", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
