@@ -16,7 +16,7 @@ public class FacebookTokenVerifier {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    @Value("${facebook.app-id}")
     private String facebookAppId;
 
     @Value("${facebook.app-secret:#{null}}")
