@@ -30,13 +30,16 @@ public class FacebookTokenVerifier {
                     "fields=id,name,first_name,last_name,email,picture.width(256).height(256)" +
                     "&access_token=" + token;
 
+            log.debug("Calling Facebook API: {}", url.replaceAll("access_token=.*", "access_token=***"));
+
             String response = restTemplate.getForObject(url, String.class);
 
-            log.debug("Facebook response received");
+            log.debug("Facebook response received: {}", response);
 
             JsonNode node = objectMapper.readTree(response);
 
             if (!node.has("id")) {
+                log.error("No ID in Facebook response: {}", response);
                 throw new IllegalArgumentException("Invalid Facebook token: no ID in response");
             }
 
@@ -47,9 +50,13 @@ public class FacebookTokenVerifier {
 
             return payload;
 
+        } catch (IllegalArgumentException e) {
+            log.error("Facebook token validation error: {}", e.getMessage());
+            throw e;
+
         } catch (Exception e) {
-            log.error("Failed to verify Facebook token", e);
-            throw new IllegalArgumentException("Invalid Facebook token", e);
+            log.error("Failed to verify Facebook token", e.getMessage(), e);
+            throw new IllegalArgumentException("Invalid Facebook token" +  e.getMessage(), e);
         }
     }
 }

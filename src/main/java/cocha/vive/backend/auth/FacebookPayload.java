@@ -46,6 +46,7 @@ public class FacebookPayload {
         @Data
         @NoArgsConstructor
         @AllArgsConstructor
+        @JsonIgnoreProperties(ignoreUnknown = true)
         public static class PictureData {
             private String url;
         }
