@@ -74,6 +74,7 @@ public class Event {
     @Column(name = "is_featured", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isFeatured = false;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "event_status", nullable = false, length = 20)
     private EventStatus eventStatus = EventStatus.PENDING;
