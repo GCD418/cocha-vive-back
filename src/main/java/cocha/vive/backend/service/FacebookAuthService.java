@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -101,16 +102,15 @@ public class FacebookAuthService {
 
         log.info("Email validated: {}", email);
 
-        Map<String, Object> verificationClaims = Map.of(
-            "facebookId", facebookId,
-            "email", email,
-            "name", claims.get("name"),
-            "firstName", claims.get("firstName"),
-            "lastName", claims.get("lastName"),
-            "photoUrl", claims.get("photoUrl"),
-            "isPerson", isPerson,
-            "purpose", "VERIFY_EMAIL"
-        );
+        Map<String, Object> verificationClaims = new HashMap<>();
+        verificationClaims.put("facebookId", facebookId);
+        verificationClaims.put("email", email);
+        verificationClaims.put("name", claims.get("name"));
+        verificationClaims.put("firstName", claims.get("firstName"));
+        verificationClaims.put("lastName", claims.get("lastName"));
+        verificationClaims.put("photoUrl", claims.get("photoUrl"));
+        verificationClaims.put("isPerson", isPerson);
+        verificationClaims.put("purpose", "VERIFY_EMAIL");
 
         String verificationToken = jwtService
             .generateTokenWithExpiration(verificationClaims, null, 172800);  // 48 horas
