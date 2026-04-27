@@ -55,7 +55,7 @@ public class FacebookTokenVerifier {
             throw e;
 
         } catch (Exception e) {
-            log.error("Failed to verify Facebook token", e.getMessage(), e);
+            log.error("Failed to verify Facebook token", e);
             throw new IllegalArgumentException("Invalid Facebook token" +  e.getMessage(), e);
         }
     }
