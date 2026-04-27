@@ -10,7 +10,15 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
+@Tag(name = "Facebook Authentication", description = "Facebook OAuth2 login and email verification endpoints")
 @Log4j2
 @RestController
 @RequestMapping("/api/auth/facebook")
@@ -19,6 +27,26 @@ public class FacebookAuthController {
 
     private final FacebookAuthService facebookAuthService;
 
+    @Operation(summary = "Authenticate with Facebook", description = "Verifies Facebook OAuth token and returns JWT for authenticated users or temporary token for new users requiring email registration")
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Authentication successful",
+            content = @Content(schema = @Schema(implementation = FacebookAuthResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid or empty token provided"
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Invalid Facebook token or token verification failed"
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal server error during token verification"
+        )
+    })
     @PostMapping
     public ResponseEntity<FacebookAuthResponse> loginWithFacebook(
             @RequestBody TokenDto tokenDto) {
@@ -46,6 +74,22 @@ public class FacebookAuthController {
         }
     }
 
+
+    @Operation(summary = "Register email for new Facebook user", description = "Validates and registers email address for new users. Sends verification email with confirmation link.")
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Email registered successfully, verification email sent"
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid email format, duplicate email, or missing required fields"
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal server error during email registration"
+        )
+    })
     @PostMapping("/register-email")
     public ResponseEntity<Void> registerEmail(
             @RequestBody RegisterEmailRequest request) {
@@ -75,6 +119,26 @@ public class FacebookAuthController {
         }
     }
 
+    @Operation(summary = "Verify email and create user account", description = "Verifies email confirmation token and creates user account in the system. Returns JWT token for immediate login.")
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Email verified successfully, user created",
+            content = @Content(schema = @Schema(implementation = AuthResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Missing or empty verification token"
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Invalid or expired verification token"
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal server error during email verification"
+        )
+    })
     @GetMapping("/verify-email")
     public ResponseEntity<AuthResponse> verifyEmail(
             @RequestParam String token) {
