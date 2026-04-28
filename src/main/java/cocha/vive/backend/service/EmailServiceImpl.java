@@ -1,6 +1,7 @@
 package cocha.vive.backend.service;
 
 import cocha.vive.backend.config.AppEmailProperties;
+import cocha.vive.backend.config.AppProperties;
 import cocha.vive.backend.model.EmailAuditLog;
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.PublisherRequest;
@@ -45,6 +46,7 @@ public class EmailServiceImpl implements EmailService {
     private final TemplateEngine templateEngine;
     private final EmailAuditLogRepository emailAuditLogRepository;
     private final AppEmailProperties appEmailProperties;
+    private final AppProperties appProperties;
 
     @Override
     @Async("emailExecutor")
@@ -245,7 +247,9 @@ public class EmailServiceImpl implements EmailService {
         Objects.requireNonNull(recipientEmail, "recipientEmail must not be null");
         Objects.requireNonNull(verificationToken, "verificationToken must not be null");
 
-        String verificationLink = "https://app.cochavive.com/verify?token=" + verificationToken;
+        String verificationLink = appProperties.getFrontendUrl()
+            + "/facebook/verify-email?token="
+            + verificationToken;
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("verificationLink", verificationLink);

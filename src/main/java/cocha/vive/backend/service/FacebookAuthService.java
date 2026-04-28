@@ -146,7 +146,7 @@ public class FacebookAuthService {
             .email(email)
             .names(name)
             .photoUrl(!photoUrl.isEmpty() ? photoUrl : null)
-            .role("ROLE_PUBLISHER")
+            .role("ROLE_USER")
             .isActive(true)
             .build();
 
@@ -167,7 +167,7 @@ public class FacebookAuthService {
 
         String internalToken = jwtService.generateToken(extraClaims, user);
 
-        return new AuthResponse(internalToken, true);
+        return new AuthResponse(internalToken, false);
     }
 
     private void validateEmail(String email) {
