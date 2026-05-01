@@ -6,7 +6,7 @@
         <expiry>
             <ttl unit="minutes">${EHCACHE_TTL_MINUTES}</ttl>
         </expiry>
-        <heap unit="entries">1000</heap>
+        <heap>1000</heap>
     </cache-template>
 
     <cache alias="cocha.vive.backend.model.User" uses-template="default"/>
