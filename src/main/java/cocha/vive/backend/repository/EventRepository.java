@@ -10,9 +10,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import jakarta.persistence.QueryHint;
+import org.springframework.data.jpa.repository.QueryHints;
+
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-     @Query(value = """
+    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
+    @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
           AND event_status = 'APPROVED'
@@ -21,6 +25,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         """, nativeQuery = true)
     List<Event> findAllPublic();
 
+    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
@@ -31,6 +36,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         """, nativeQuery = true)
     List<Event> findActiveFeatured();
 
+    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
@@ -40,6 +46,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         """, nativeQuery = true)
     List<Event> findActiveUpcoming();
 
+    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
@@ -48,6 +55,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         """, nativeQuery = true)
     List<Event> findAllByOrganizedByUserId(@Param("userId") Long userId);
 
+    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         ORDER BY created_at DESC
@@ -63,5 +71,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                      @Param("status") EventStatus status,
                      @Param("userId") Long userId);
 
+    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     List<Event> findByCategoryId(Long categoryId);
 }
