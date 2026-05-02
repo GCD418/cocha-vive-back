@@ -3,6 +3,8 @@ package cocha.vive.backend.service;
 import cocha.vive.backend.auth.*;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.repository.UserRepository;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -68,7 +70,7 @@ public class FacebookAuthService {
             "firstName", payload.getFirstName() != null ? payload.getFirstName() : "",
             "lastName", payload.getLastName() != null ? payload.getLastName() : "",
             "photoUrl", payload.getPictureUrl() != null ? payload.getPictureUrl() : "",
-            "isPerson", isPerson,  // ← Guarda si es persona o página
+            "isPerson", isPerson,
             "purpose", "EMAIL_REGISTRATION"
         );
 
@@ -124,8 +126,17 @@ public class FacebookAuthService {
     public AuthResponse verifyEmail(String verificationToken) {
         log.info("Verifying email for Facebook user");
 
-        Map<String, Object> claims = jwtService
-            .extractAllClaimsAsMap(verificationToken);
+        Map<String, Object> claims;
+
+        try {
+            claims = jwtService.extractAllClaimsAsMap(verificationToken);
+        } catch (ExpiredJwtException e) {
+            log.warn("Verification token expired");
+            throw new IllegalArgumentException("Verification token expired");
+        } catch (JwtException e) {
+            log.warn("Invalid verification token: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid verification token");
+        }
 
         if (!"VERIFY_EMAIL".equals(claims.get("purpose"))) {
             log.warn("Invalid token purpose for email verification");
@@ -135,16 +146,35 @@ public class FacebookAuthService {
         String facebookId = (String) claims.get("facebookId");
         String email = (String) claims.get("email");
         String name = (String) claims.get("name");
-        String firstName = (String) claims.get("firstName");
         String lastName = (String) claims.get("lastName");
         String photoUrl = (String) claims.get("photoUrl");
         boolean isPerson = (boolean) claims.get("isPerson");
 
         log.info("Creating new Facebook user/page: email={}, isPerson={}", email, isPerson);
 
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            if (isPerson && user.getFacebookProviderId() == null) {
+                user.setFacebookProviderId(facebookId);
+                userRepository.save(user);
+            } else if (!isPerson && user.getFacebookPageId() == null) {
+                user.setFacebookPageId(facebookId);
+                userRepository.save(user);
+            }
+
+            Map<String, Object> extraClaims = Map.of("roles", user.getAuthorities());
+            String internalToken = jwtService.generateToken(extraClaims, user);
+            boolean requiresOnboarding = user.getDocumentNumber() == null
+                || user.getDocumentNumber().isBlank();
+
+            return new AuthResponse(internalToken, requiresOnboarding);
+        }
+
         User user = User.builder()
             .email(email)
             .names(name)
+            .firstLastName(isPerson ? (lastName != null ? lastName : "") : "")
             .photoUrl(!photoUrl.isEmpty() ? photoUrl : null)
             .role("ROLE_USER")
             .isActive(true)
@@ -152,7 +182,6 @@ public class FacebookAuthService {
 
         if (isPerson) {
             user.setFacebookProviderId(facebookId);
-            user.setFirstLastName(lastName);
         } else {
             user.setFacebookPageId(facebookId);
         }
@@ -167,7 +196,10 @@ public class FacebookAuthService {
 
         String internalToken = jwtService.generateToken(extraClaims, user);
 
-        return new AuthResponse(internalToken, false);
+        boolean requiresOnboarding = user.getDocumentNumber() == null
+        || user.getDocumentNumber().isBlank();
+
+        return new AuthResponse(internalToken, requiresOnboarding);
     }
 
     private void validateEmail(String email) {
