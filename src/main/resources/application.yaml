@@ -58,9 +58,9 @@ spring:
             required: true
         debug: false
 
-  facebook:
-    app-id: ${FACEBOOK_APP_ID}
-    app-secret: ${FACEBOOK_APP_SECRET}
+facebook:
+  app-id: ${FACEBOOK_APP_ID}
+  app-secret: ${FACEBOOK_APP_SECRET}
 
 logging:
   level:
