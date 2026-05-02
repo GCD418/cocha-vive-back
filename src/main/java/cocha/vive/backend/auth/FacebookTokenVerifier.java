@@ -4,42 +4,40 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FacebookTokenVerifier {
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final ObjectMapper objectMapper;
-
-    @Value("${facebook.app-id}")
-    private String facebookAppId;
-
-    @Value("${facebook.app-secret:#{null}}")
-    private String facebookAppSecret;
 
     public FacebookPayload verify(String token) {
         try {
             log.debug("Verifying Facebook token");
 
-            String url = "https://graph.facebook.com/me?" +
-                    "fields=id,name,first_name,last_name,email,picture.width(256).height(256)" +
-                    "&access_token=" + token;
+            URI uri = UriComponentsBuilder
+                .fromUriString("https://graph.facebook.com/me")
+                .queryParam("fields", "id,name,first_name,last_name,email,picture.width(256).height(256)")
+                .queryParam("access_token", token)
+                .build()
+                .toUri();
 
-            log.debug("Calling Facebook API: {}", url.replaceAll("access_token=.*", "access_token=***"));
-
-            String response = restTemplate.getForObject(url, String.class);
-
-            log.debug("Facebook response received: {}", response);
+            String response = restClient.get()
+                .uri(uri)
+                .retrieve()
+                .body(String.class);
 
             JsonNode node = objectMapper.readTree(response);
 
             if (!node.has("id")) {
-                log.error("No ID in Facebook response: {}", response);
+                log.error("No ID in Facebook response");
                 throw new IllegalArgumentException("Invalid Facebook token: no ID in response");
             }
 
@@ -56,7 +54,7 @@ public class FacebookTokenVerifier {
 
         } catch (Exception e) {
             log.error("Failed to verify Facebook token", e);
-            throw new IllegalArgumentException("Invalid Facebook token" +  e.getMessage(), e);
+            throw new IllegalArgumentException("Invalid Facebook token: " +  e.getMessage(), e);
         }
     }
 }
