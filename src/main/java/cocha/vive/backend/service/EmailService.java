@@ -18,4 +18,6 @@ public interface EmailService {
     void sendPublisherRequestRejectedEmail(User recipientUser, PublisherRequest publisherRequest);
 
     void sendCustomEmail(EmailRequest request, String templateName, User createdByUser);
+
+    void sendPublisherDemotionEmail(User recipientUser, String demotionReason);
 }
