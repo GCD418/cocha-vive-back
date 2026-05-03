@@ -1,6 +1,5 @@
 package cocha.vive.backend.auth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,12 +8,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FacebookTokenVerifier Tests")
@@ -24,7 +22,16 @@ public class FacebookTokenVerifierTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock
-    private RestTemplate restTemplate;
+    private RestClient restClient;
+
+    @Mock
+    private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
+
+    @Mock
+    private RestClient.RequestHeadersSpec requestHeadersSpec;
+
+    @Mock
+    private RestClient.ResponseSpec responseSpec;
 
     @InjectMocks
     private FacebookTokenVerifier facebookTokenVerifier;
@@ -35,56 +42,55 @@ public class FacebookTokenVerifierTest {
 
     @BeforeEach
     void setUp() {
-        // Inicializar ObjectMapper real
-        objectMapper = org.mockito.Mockito.spy(new com.fasterxml.jackson.databind.ObjectMapper());
+        validPersonResponse = """
+            {
+              "id": "123456789",
+              "name": "John Doe",
+              "first_name": "John",
+              "last_name": "Doe",
+              "email": "john@example.com",
+              "picture": {
+                "data": {
+                  "url": "https://example.com/photo.jpg",
+                  "width": 256,
+                  "height": 256
+                }
+              }
+            }""";
 
-        // Response válida para una persona
-        validPersonResponse = "{\n" +
-            "  \"id\": \"123456789\",\n" +
-            "  \"name\": \"John Doe\",\n" +
-            "  \"first_name\": \"John\",\n" +
-            "  \"last_name\": \"Doe\",\n" +
-            "  \"email\": \"john@example.com\",\n" +
-            "  \"picture\": {\n" +
-            "    \"data\": {\n" +
-            "      \"url\": \"https://example.com/photo.jpg\",\n" +
-            "      \"width\": 256,\n" +
-            "      \"height\": 256\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
+        validPageResponse = """
+            {
+              "id": "987654321",
+              "name": "Test Organization",
+              "picture": {
+                "data": {
+                  "url": "https://example.com/logo.jpg",
+                  "width": 256,
+                  "height": 256
+                }
+              }
+            }""";
 
-        // Response válida para una página
-        validPageResponse = "{\n" +
-            "  \"id\": \"987654321\",\n" +
-            "  \"name\": \"Test Organization\",\n" +
-            "  \"picture\": {\n" +
-            "    \"data\": {\n" +
-            "      \"url\": \"https://example.com/logo.jpg\",\n" +
-            "      \"width\": 256,\n" +
-            "      \"height\": 256\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
+        invalidResponse = """
+            {
+              "name": "John Doe"
+            }""";
+    }
 
-        // Response inválida (sin ID)
-        invalidResponse = "{\n" +
-            "  \"name\": \"John Doe\"\n" +
-            "}";
+    private void mockRestClientResponse(String responseBody) {
+        when(restClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(any(java.net.URI.class))).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.body(String.class)).thenReturn(responseBody);
     }
 
     @Test
     @DisplayName("Should verify valid person token and return FacebookPayload")
     void testVerifyValidPersonToken() {
-        // Given
-        String token = "valid_person_token";
-        when(restTemplate.getForObject(anyString(), eq(String.class)))
-            .thenReturn(validPersonResponse);
+        mockRestClientResponse(validPersonResponse);
 
-        // When
-        FacebookPayload payload = facebookTokenVerifier.verify(token);
+        FacebookPayload payload = facebookTokenVerifier.verify("valid_person_token");
 
-        // Then
         assertNotNull(payload);
         assertEquals("123456789", payload.getId());
         assertEquals("John Doe", payload.getName());
@@ -97,15 +103,10 @@ public class FacebookTokenVerifierTest {
     @Test
     @DisplayName("Should verify valid page token and return FacebookPayload")
     void testVerifyValidPageToken() {
-        // Given
-        String token = "valid_page_token";
-        when(restTemplate.getForObject(anyString(), eq(String.class)))
-            .thenReturn(validPageResponse);
+        mockRestClientResponse(validPageResponse);
 
-        // When
-        FacebookPayload payload = facebookTokenVerifier.verify(token);
+        FacebookPayload payload = facebookTokenVerifier.verify("valid_page_token");
 
-        // Then
         assertNotNull(payload);
         assertEquals("987654321", payload.getId());
         assertEquals("Test Organization", payload.getName());
@@ -118,50 +119,33 @@ public class FacebookTokenVerifierTest {
     @Test
     @DisplayName("Should throw exception for invalid token (no ID in response)")
     void testVerifyInvalidTokenNoId() {
-        // Given
-        String token = "invalid_token";
-        when(restTemplate.getForObject(anyString(), eq(String.class)))
-            .thenReturn(invalidResponse);
+        mockRestClientResponse(invalidResponse);
 
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            facebookTokenVerifier.verify(token);
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+            facebookTokenVerifier.verify("invalid_token"));
     }
 
     @Test
     @DisplayName("Should throw exception for malformed JSON response")
     void testVerifyMalformedResponse() {
-        // Given
-        String token = "token_with_malformed_response";
-        String malformedResponse = "{invalid json}";
-        when(restTemplate.getForObject(anyString(), eq(String.class)))
-            .thenReturn(malformedResponse);
+        mockRestClientResponse("{invalid json}");
 
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            facebookTokenVerifier.verify(token);
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+            facebookTokenVerifier.verify("token_with_malformed_response"));
     }
 
     @Test
     @DisplayName("Should throw exception when REST call fails")
     void testVerifyNetworkError() {
-        // Given
-        String token = "token_causing_network_error";
-        when(restTemplate.getForObject(anyString(), eq(String.class)))
-            .thenThrow(new org.springframework.web.client.RestClientException("Network error"));
+        when(restClient.get()).thenThrow(new org.springframework.web.client.RestClientException("Network error"));
 
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () -> {
-            facebookTokenVerifier.verify(token);
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+            facebookTokenVerifier.verify("token_causing_network_error"));
     }
 
     @Test
     @DisplayName("Should detect person by presence of first_name or last_name")
     void testIsPerson() {
-        // Given - Person with firstName
         FacebookPayload.Picture picture = new FacebookPayload.Picture();
         picture.setData(new FacebookPayload.Picture.PictureData());
         picture.getData().setUrl("https://example.com/photo.jpg");
@@ -174,14 +158,12 @@ public class FacebookTokenVerifierTest {
             .picture(picture)
             .build();
 
-        // When & Then
         assertTrue(personPayload.isPerson());
     }
 
     @Test
     @DisplayName("Should detect page by absence of first_name and last_name")
     void testIsPage() {
-        // Given - Page without firstName/lastName
         FacebookPayload.Picture picture = new FacebookPayload.Picture();
         picture.setData(new FacebookPayload.Picture.PictureData());
         picture.getData().setUrl("https://example.com/logo.jpg");
@@ -194,7 +176,6 @@ public class FacebookTokenVerifierTest {
             .picture(picture)
             .build();
 
-        // When & Then
         assertFalse(pagePayload.isPerson());
     }
 }

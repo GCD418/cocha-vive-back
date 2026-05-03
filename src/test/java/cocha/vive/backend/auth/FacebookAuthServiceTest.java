@@ -237,7 +237,6 @@ public class FacebookAuthServiceTest {
     @Test
     @DisplayName("Should create person user after email verification")
     void testVerifyEmailAndCreatePerson() {
-        // Given
         String verificationToken = "valid_token";
 
         when(jwtService.extractAllClaimsAsMap(verificationToken))
@@ -251,19 +250,20 @@ public class FacebookAuthServiceTest {
                 "isPerson", true,
                 "purpose", "VERIFY_EMAIL"
             ));
+        when(userRepository.findByEmail("john.doe@example.com"))
+            .thenReturn(Optional.empty());
         when(userRepository.save(any(User.class)))
             .thenReturn(existingUser);
         when(jwtService.generateToken(any(), any(User.class)))
             .thenReturn("final_jwt");
 
-        // When
         AuthResponse response = facebookAuthService.verifyEmail(verificationToken);
 
-        // Then
         assertNotNull(response);
         assertEquals("final_jwt", response.internalToken());
-        assertEquals(true, response.requiresOnboarding());
+        assertTrue(response.requiresOnboarding());
 
+        verify(userRepository).findByEmail("john.doe@example.com");
         verify(userRepository).save(any(User.class));
         verify(jwtService).generateToken(any(), any(User.class));
     }
@@ -271,14 +271,13 @@ public class FacebookAuthServiceTest {
     @Test
     @DisplayName("Should create page user after email verification")
     void testVerifyEmailAndCreatePage() {
-        // Given
         String verificationToken = "valid_token";
         User pageUser = User.builder()
             .id(2L)
             .email("jefe.cultura@alcaldia.gob.bo")
             .names("Alcaldía de La Paz")
             .facebookPageId("987654321")
-            .role("ROLE_PUBLISHER")
+            .role("ROLE_USER")
             .build();
 
         when(jwtService.extractAllClaimsAsMap(verificationToken))
@@ -292,19 +291,20 @@ public class FacebookAuthServiceTest {
                 "isPerson", false,
                 "purpose", "VERIFY_EMAIL"
             ));
+        when(userRepository.findByEmail("jefe.cultura@alcaldia.gob.bo"))
+            .thenReturn(Optional.empty());
         when(userRepository.save(any(User.class)))
             .thenReturn(pageUser);
         when(jwtService.generateToken(any(), any(User.class)))
             .thenReturn("final_jwt");
 
-        // When
         AuthResponse response = facebookAuthService.verifyEmail(verificationToken);
 
-        // Then
         assertNotNull(response);
         assertEquals("final_jwt", response.internalToken());
-        assertEquals(true, response.requiresOnboarding());
+        assertTrue(response.requiresOnboarding());
 
+        verify(userRepository).findByEmail("jefe.cultura@alcaldia.gob.bo");
         verify(userRepository).save(any(User.class));
     }
 }
