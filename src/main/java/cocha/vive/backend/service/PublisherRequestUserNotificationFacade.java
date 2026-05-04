@@ -17,6 +17,7 @@ public class PublisherRequestUserNotificationFacade {
     private final EmailService emailService;
     private final FeatureToggleService featureToggleService;
     private final PublisherRequestNotificationProperties publisherRequestNotificationProperties;
+    private static final String DEMOTED_FROM_PUBLISHER_TITLE = "Your publisher access has been revoked";
 
     public void notifyApproved(User recipientUser, PublisherRequest publisherRequest) {
         if (!isEnabled()) {
@@ -46,6 +47,21 @@ public class PublisherRequestUserNotificationFacade {
             publisherRequest.getRejectionReason()
         );
         emailService.sendPublisherRequestRejectedEmail(recipientUser, publisherRequest);
+    }
+
+    public void notifyDemotedFromPublisher(User recipient, String demotionReason) {
+        if (!isEnabled()) {
+            log.debug("Skipping publisher demotion notification for user id {} because feature flag is OFF",
+                recipient != null ? recipient.getId() : null);
+            return;
+        }
+
+        notificationService.create(
+            recipient,
+            DEMOTED_FROM_PUBLISHER_TITLE,
+            demotionReason
+        );
+        emailService.sendPublisherDemotionEmail(recipient, demotionReason);
     }
 
     private boolean isEnabled() {
