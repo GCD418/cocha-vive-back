@@ -1,6 +1,7 @@
 package cocha.vive.backend.controller;
 
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
+import cocha.vive.backend.model.dto.PublisherDemotionDTO;
 import cocha.vive.backend.model.dto.RoleChangeResponseDTO;
 import cocha.vive.backend.model.dto.UserMeDTO;
 import cocha.vive.backend.model.mapper.UserMapper;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -64,5 +66,25 @@ public class AdminRoleController {
     @PatchMapping("/{userId}/demote")
     public ResponseEntity<RoleChangeResponseDTO> demoteToUser(@PathVariable Long userId) {
         return ResponseEntity.ok(adminRoleService.demoteToUser(userId));
+    }
+
+    @Operation(
+        summary = "Demote a ROLE_PUBLISHER to ROLE_USER",
+        description = "Revokes publisher access and downgrades the user to ROLE_USER. " +
+                      "A mandatory demotion reason is required and is sent as a notification to the affected user."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Publisher demoted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request payload or invalid role transition",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Forbidden – caller does not have SUPERADMIN role"),
+        @ApiResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    @PatchMapping("/{userId}/demote-publisher")
+    public ResponseEntity<RoleChangeResponseDTO> demotePublisherToUser(
+        @PathVariable Long userId,
+        @Valid @RequestBody PublisherDemotionDTO dto) {
+        return ResponseEntity.ok(adminRoleService.demotePublisherToUser(userId, dto));
     }
 }
