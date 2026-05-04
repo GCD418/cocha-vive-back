@@ -27,6 +27,16 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: ${HIBERNATE_FORMAT_SQL:false}
         generate_statistics: ${HIBERNATE_GENERATE_STATISTICS:false}
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: jcache
+        javax:
+          cache:
+            provider: org.ehcache.jsr107.EhcacheCachingProvider
+            uri: classpath:ehcache.xml
+            missing_cache_strategy: create
 
   cloudinary:
     cloud-name: ${CLOUDINARY_CLOUD_NAME}
@@ -95,7 +105,7 @@ app:
 unleash:
   app-name: cocha-vive-unleash
   instance-id: unleash-onboarding-instance
-  api-url: https://primary-production-0ced61.up.railway.app/api/
+  api-url: ${UNLEASH_API_URL}
   api-token: ${UNLEASH_API_TOKEN}
   environment: production
   fetch-toggles-interval: 15
