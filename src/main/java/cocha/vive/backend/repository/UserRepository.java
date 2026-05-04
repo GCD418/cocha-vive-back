@@ -18,4 +18,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     List<User> findAllByRole(String role);
+  
+    Optional<User> findByFacebookProviderId(String facebookProviderId);
+
+    Optional<User> findByFacebookPageId(String facebookPageId);
+
 }
