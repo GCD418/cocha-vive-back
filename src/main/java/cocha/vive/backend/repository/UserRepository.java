@@ -11,5 +11,9 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByFacebookProviderId(String facebookProviderId);
+
+    Optional<User> findByFacebookPageId(String facebookPageId);
+
     List<User> findAllByRole(String role);
 }
