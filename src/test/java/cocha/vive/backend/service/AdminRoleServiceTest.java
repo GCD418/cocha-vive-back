@@ -4,11 +4,14 @@ import cocha.vive.backend.exception.InvalidRoleTransitionException;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.RoleChangeResponseDTO;
+import cocha.vive.backend.model.dto.PublisherDemotionDTO;
 import cocha.vive.backend.repository.UserRepository;
+import cocha.vive.backend.service.PublisherRequestUserNotificationFacade;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,6 +30,9 @@ public class AdminRoleServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private PublisherRequestUserNotificationFacade publisherRequestUserNotificationFacade;
+
     @InjectMocks
     private AdminRoleService adminRoleService;
 
@@ -37,6 +43,10 @@ public class AdminRoleServiceTest {
             .role(role)
             .isActive(true)
             .build();
+    }
+
+    private PublisherDemotionDTO buildDemotionDTO() {
+        return new PublisherDemotionDTO("Publisher repeatedly violated content guidelines.");
     }
 
     @Nested
@@ -149,6 +159,144 @@ public class AdminRoleServiceTest {
 
             assertThatThrownBy(() -> adminRoleService.demoteToUser(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("demotePublisherToUser")
+    class DemotePublisherToUser {
+
+        @Test
+        @DisplayName("demotes ROLE_PUBLISHER to ROLE_USER successfully and persists audit metadata")
+        void shouldDemotePublisherToUserAndPersistAuditMetadata() {
+            User target = buildUser(2L, "ROLE_PUBLISHER");
+
+            when(auditService.getActualUserId()).thenReturn(1L);
+            when(userRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            RoleChangeResponseDTO result = adminRoleService.demotePublisherToUser(2L, buildDemotionDTO());
+
+            assertThat(result.role()).isEqualTo("ROLE_USER");
+            assertThat(result.id()).isEqualTo(2L);
+
+            ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+            verify(userRepository).save(captor.capture());
+            assertThat(captor.getValue().getRole()).isEqualTo("ROLE_USER");
+            assertThat(captor.getValue().getModifiedByUserId()).isEqualTo(1L);
+        }
+
+        @Test
+        @DisplayName("triggers notification facade after successful demotion")
+        void shouldTriggerNotificationFacadeAfterDemotion() {
+            User target = buildUser(2L, "ROLE_PUBLISHER");
+            PublisherDemotionDTO dto = buildDemotionDTO();
+
+            when(auditService.getActualUserId()).thenReturn(1L);
+            when(userRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(userRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            adminRoleService.demotePublisherToUser(2L, dto);
+
+            verify(publisherRequestUserNotificationFacade)
+                .notifyDemotedFromPublisher(target, dto.demotionReason());
+        }
+
+        @Test
+        @DisplayName("throws InvalidRoleTransitionException on self-demotion")
+        void shouldThrowOnSelfDemotion() {
+            when(auditService.getActualUserId()).thenReturn(1L);
+
+            assertThatThrownBy(() -> adminRoleService.demotePublisherToUser(1L, buildDemotionDTO()))
+                .isInstanceOf(InvalidRoleTransitionException.class)
+                .hasMessageContaining("Self-demotion");
+
+            verify(userRepository, never()).findById(any());
+            verify(userRepository, never()).save(any());
+            verify(publisherRequestUserNotificationFacade, never())
+                .notifyDemotedFromPublisher(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("throws InvalidRoleTransitionException when target is ROLE_USER")
+        void shouldThrowWhenTargetIsRoleUser() {
+            User target = buildUser(2L, "ROLE_USER");
+
+            when(auditService.getActualUserId()).thenReturn(1L);
+            when(userRepository.findById(2L)).thenReturn(Optional.of(target));
+
+            assertThatThrownBy(() -> adminRoleService.demotePublisherToUser(2L, buildDemotionDTO()))
+                .isInstanceOf(InvalidRoleTransitionException.class)
+                .hasMessageContaining("ROLE_USER");
+
+            verify(userRepository, never()).save(any());
+            verify(publisherRequestUserNotificationFacade, never())
+                .notifyDemotedFromPublisher(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("throws InvalidRoleTransitionException when target is ROLE_ADMIN")
+        void shouldThrowWhenTargetIsRoleAdmin() {
+            User target = buildUser(2L, "ROLE_ADMIN");
+
+            when(auditService.getActualUserId()).thenReturn(1L);
+            when(userRepository.findById(2L)).thenReturn(Optional.of(target));
+
+            assertThatThrownBy(() -> adminRoleService.demotePublisherToUser(2L, buildDemotionDTO()))
+                .isInstanceOf(InvalidRoleTransitionException.class)
+                .hasMessageContaining("ROLE_ADMIN");
+
+            verify(userRepository, never()).save(any());
+            verify(publisherRequestUserNotificationFacade, never())
+                .notifyDemotedFromPublisher(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("throws InvalidRoleTransitionException when target is ROLE_SUPERADMIN")
+        void shouldThrowWhenTargetIsRoleSuperadmin() {
+            User target = buildUser(2L, "ROLE_SUPERADMIN");
+
+            when(auditService.getActualUserId()).thenReturn(1L);
+            when(userRepository.findById(2L)).thenReturn(Optional.of(target));
+
+            assertThatThrownBy(() -> adminRoleService.demotePublisherToUser(2L, buildDemotionDTO()))
+                .isInstanceOf(InvalidRoleTransitionException.class)
+                .hasMessageContaining("ROLE_SUPERADMIN");
+
+            verify(userRepository, never()).save(any());
+            verify(publisherRequestUserNotificationFacade, never())
+                .notifyDemotedFromPublisher(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("throws ResourceNotFoundException when user does not exist")
+        void shouldThrowWhenUserNotFound() {
+            when(auditService.getActualUserId()).thenReturn(1L);
+            when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> adminRoleService.demotePublisherToUser(99L, buildDemotionDTO()))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
+
+            verify(userRepository, never()).save(any());
+            verify(publisherRequestUserNotificationFacade, never())
+                .notifyDemotedFromPublisher(any(), anyString());
+        }
+
+        @Test
+        @DisplayName("does not trigger notification when save fails")
+        void shouldNotTriggerNotificationWhenSaveFails() {
+            User target = buildUser(2L, "ROLE_PUBLISHER");
+
+            when(auditService.getActualUserId()).thenReturn(1L);
+            when(userRepository.findById(2L)).thenReturn(Optional.of(target));
+            when(userRepository.save(any())).thenThrow(new RuntimeException("DB error"));
+
+            assertThatThrownBy(() -> adminRoleService.demotePublisherToUser(2L, buildDemotionDTO()))
+                .isInstanceOf(RuntimeException.class);
+
+            verify(publisherRequestUserNotificationFacade, never())
+                .notifyDemotedFromPublisher(any(), anyString());
         }
     }
 }
