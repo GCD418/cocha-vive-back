@@ -4,6 +4,8 @@ import cocha.vive.backend.auth.AuthResponse;
 import cocha.vive.backend.auth.FacebookAuthResponse;
 import cocha.vive.backend.auth.TokenDto;
 import cocha.vive.backend.auth.RegisterEmailRequest;
+import cocha.vive.backend.core.annotations.FeatureFlag;
+import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.service.FacebookAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -19,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "Facebook Authentication", description = "Facebook OAuth2 login and email verification endpoints")
 @Log4j2
+@FeatureFlag(AppFeature.FACEBOOK_LOGIN)
 @RestController
 @RequestMapping("/api/auth/facebook")
 @RequiredArgsConstructor
