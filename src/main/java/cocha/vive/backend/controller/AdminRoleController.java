@@ -24,7 +24,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPERADMIN')")
 @Tag(name = "Admin Role Management", description = "Endpoints for promoting and demoting user roles")
 public class AdminRoleController {
 
@@ -34,6 +33,7 @@ public class AdminRoleController {
 
     @Operation(summary = "Get all users")
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<List<UserMeDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAll().stream()
             .map(userMapper::toMeDto)
@@ -82,6 +82,7 @@ public class AdminRoleController {
             content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     @PatchMapping("/{userId}/demote-publisher")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<RoleChangeResponseDTO> demotePublisherToUser(
         @PathVariable Long userId,
         @Valid @RequestBody PublisherDemotionDTO dto) {

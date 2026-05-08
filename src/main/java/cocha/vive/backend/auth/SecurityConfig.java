@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/config/features").permitAll()
-                .requestMatchers("/api/admin/users/**").hasRole("SUPERADMIN")
+                .requestMatchers("/api/admin/users/**").hasAnyRole("SUPERADMIN", "ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
