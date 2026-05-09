@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,6 +67,7 @@ class TicketServiceTest {
 
         Event event = new Event();
         event.setOrganizedByUser(organizer);
+        event.setDateEnd(LocalDateTime.now().plusDays(1));
 
         Ticket ticket = new Ticket();
         ticket.setId(5L);
@@ -145,7 +147,6 @@ class TicketServiceTest {
         event.setOrganizedByUser(organizer);
 
         Ticket ticket = mock(Ticket.class);
-        when(ticket.getId()).thenReturn(5L);
         when(ticket.getEvent()).thenReturn(event);
         when(ticket.getUsed()).thenReturn(false);
         when(ticket.isExpired()).thenReturn(true);
