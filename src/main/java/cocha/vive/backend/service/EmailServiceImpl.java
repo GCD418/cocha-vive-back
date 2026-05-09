@@ -283,6 +283,7 @@ public class EmailServiceImpl implements EmailService {
             variables.put("quantity", ticket.getQuantity());
             variables.put("unitPrice", formatMoneyFromMinor(ticket.getUnitPrice()));
             variables.put("totalPrice", formatMoneyFromMinor(ticket.totalPrice()));
+            variables.put("expired", ticket.isExpired());
             variables.put("eventTitle", ticket.getEvent() != null ? ticket.getEvent().getTitle() : "Evento");
             variables.put("eventDateStart", ticket.getEvent() != null && ticket.getEvent().getDateStart() != null
                 ? DATE_TIME_FORMATTER.format(ticket.getEvent().getDateStart())

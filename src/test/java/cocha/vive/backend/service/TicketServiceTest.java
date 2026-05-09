@@ -57,7 +57,7 @@ class TicketServiceTest {
         buyer.setId(33L);
 
         Ticket ticket = Ticket.builder().id(UUID.randomUUID()).build();
-        TicketResponseDTO dto = new TicketResponseDTO(ticket.getId(), 1, 100L, 100L, false, 10L, 33L, null);
+        TicketResponseDTO dto = new TicketResponseDTO(ticket.getId(), 1, 100L, 100L, false, false, 10L, 33L, null);
 
         when(userService.getActualUser()).thenReturn(buyer);
         when(ticketRepository.findAllByBuyerUserIdIdOrderByCreatedAtDesc(33L))
@@ -194,7 +194,7 @@ class TicketServiceTest {
             .used(false)
             .build();
 
-        TicketResponseDTO dto = new TicketResponseDTO(ticketId, 2, 10000L, 20000L, false, 99L, 33L, null);
+        TicketResponseDTO dto = new TicketResponseDTO(ticketId, 2, 10000L, 20000L, false, false, 99L, 33L, null);
 
         when(userService.getActualUser()).thenReturn(buyer);
         when(eventRepository.findById(99L)).thenReturn(Optional.of(event));

@@ -8,6 +8,7 @@ public record TicketResponseDTO(
     Integer quantity,
     Long unitPrice,
     Long totalPrice,
+    Boolean expired,
     Boolean used,
     Long eventId,
     Long buyerUserId,
