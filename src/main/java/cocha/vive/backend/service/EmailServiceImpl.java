@@ -4,6 +4,7 @@ import cocha.vive.backend.config.AppEmailProperties;
 import cocha.vive.backend.config.AppProperties;
 import cocha.vive.backend.model.EmailAuditLog;
 import cocha.vive.backend.model.Event;
+import cocha.vive.backend.model.Ticket;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.EmailRequest;
@@ -41,6 +42,7 @@ public class EmailServiceImpl implements EmailService {
     private static final String TEMPLATE_PUBLISHER_REQUEST_REJECTED = "emails/publisher-request-rejected";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final String TEMPLATE_EMAIL_VERIFICATION = "emails/email-verification";
+    private static final String TEMPLATE_TICKET_PURCHASED = "emails/ticket-purchased";
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
@@ -261,5 +263,35 @@ public class EmailServiceImpl implements EmailService {
         );
 
         sendTemplatedEmail(request, TEMPLATE_EMAIL_VERIFICATION, variables, null);
+    }
+
+    @Override
+    @Async("emailExecutor")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, String qrCodePngBase64) {
+        Objects.requireNonNull(recipientUser, "recipientUser must not be null");
+        Objects.requireNonNull(ticket, "ticket must not be null");
+        Objects.requireNonNull(qrCodePngBase64, "qrCodePngBase64 must not be null");
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("userName", resolveUserDisplayName(recipientUser));
+        variables.put("ticketId", ticket.getId());
+        variables.put("quantity", ticket.getQuantity());
+        variables.put("unitPrice", ticket.getUnitPrice());
+        variables.put("totalPrice", ticket.totalPrice());
+        variables.put("used", ticket.getUsed());
+        variables.put("eventTitle", ticket.getEvent() != null ? ticket.getEvent().getTitle() : "Evento");
+        variables.put("eventDateStart", ticket.getEvent() != null && ticket.getEvent().getDateStart() != null
+            ? DATE_TIME_FORMATTER.format(ticket.getEvent().getDateStart())
+            : "No definido");
+        variables.put("qrDataUri", "data:image/png;base64," + qrCodePngBase64);
+
+        EmailRequest request = new EmailRequest(
+            recipientUser.getEmail(),
+            "Tu ticket CochaVive",
+            ""
+        );
+
+        sendTemplatedEmail(request, TEMPLATE_TICKET_PURCHASED, variables, ticket.getBuyerUserId());
     }
 }

@@ -7,6 +7,7 @@ import cocha.vive.backend.model.Ticket;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.TicketResponseDTO;
 import cocha.vive.backend.model.mapper.TicketMapper;
+import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.TicketRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,10 +33,19 @@ class TicketServiceTest {
     private TicketRepository ticketRepository;
 
     @Mock
+    private EventRepository eventRepository;
+
+    @Mock
     private UserService userService;
 
     @Mock
     private TicketMapper ticketMapper;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private QrCodeService qrCodeService;
 
     @InjectMocks
     private TicketService ticketService;
@@ -156,5 +166,39 @@ class TicketServiceTest {
 
         assertThrows(InvalidStateTransitionException.class, () -> ticketService.markUsed(5L));
         verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @Test
+    void createTicket_shouldPersistAndSendEmail() {
+        User buyer = new User();
+        buyer.setId(33L);
+        buyer.setEmail("buyer@example.com");
+
+        Event event = new Event();
+        event.setId(99L);
+        event.setTitle("Evento");
+
+        Ticket saved = Ticket.builder()
+            .id(123L)
+            .buyerUserId(buyer)
+            .event(event)
+            .quantity(2)
+            .unitPrice(100L)
+            .used(false)
+            .build();
+
+        TicketResponseDTO dto = new TicketResponseDTO(123L, 2, 100L, 200L, false, 99L, 33L, null);
+
+        when(userService.getActualUser()).thenReturn(buyer);
+        when(eventRepository.findById(99L)).thenReturn(Optional.of(event));
+        when(ticketRepository.save(any(Ticket.class))).thenReturn(saved);
+        when(qrCodeService.generatePngBase64("TICKET:123", 240, 240)).thenReturn("base64");
+        when(ticketMapper.toResponseDto(saved)).thenReturn(dto);
+
+        TicketResponseDTO result = ticketService.createTicket(99L, 2, 100L);
+
+        assertThat(result.id()).isEqualTo(123L);
+        verify(ticketRepository).save(any(Ticket.class));
+        verify(emailService).sendTicketPurchasedEmail(buyer, saved, "base64");
     }
 }

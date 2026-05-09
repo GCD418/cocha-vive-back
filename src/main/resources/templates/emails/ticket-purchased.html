@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Tu ticket</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,Helvetica,sans-serif;color:#222;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f6f8;padding:24px 0;">
+    <tr>
+        <td align="center">
+            <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e9edf2;">
+                <tr>
+                    <td style="background:linear-gradient(135deg,#123b63 0%,#1f6fb2 100%);padding:28px 32px;color:#ffffff;">
+                        <h1 style="margin:0;font-size:22px;line-height:1.2;">Tu ticket está listo</h1>
+                        <p style="margin:10px 0 0;font-size:14px;opacity:0.95;" th:text="${eventTitle}">Evento</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:28px 32px;">
+                        <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">
+                            Hola <strong th:text="${userName}">Usuario</strong>,
+                        </p>
+                        <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#3a4754;">
+                            Este es tu ticket. En el ingreso del evento, presentá este QR.
+                        </p>
+
+                        <div style="margin:18px 0 8px;padding:16px;border:1px solid #e9edf2;border-radius:12px;background:#f8fafc;">
+                            <p style="margin:0 0 8px;font-size:13px;color:#6b7785;">ID de ticket</p>
+                            <p style="margin:0;font-size:18px;font-weight:700;letter-spacing:0.5px;" th:text="${ticketId}">0</p>
+                            <p style="margin:10px 0 0;font-size:13px;color:#6b7785;">Fecha inicio</p>
+                            <p style="margin:0;font-size:14px;color:#3a4754;" th:text="${eventDateStart}">No definido</p>
+                        </div>
+
+                        <div style="text-align:center;margin:18px 0 8px;">
+                            <img th:src="${qrDataUri}" alt="QR Ticket" width="220" height="220" style="display:inline-block;border:1px solid #e9edf2;border-radius:12px;background:#ffffff;"/>
+                        </div>
+
+                        <p style="margin:14px 0 0;font-size:13px;color:#6b7785;line-height:1.6;">
+                            Cantidad: <span th:text="${quantity}">1</span> ·
+                            Precio unitario: <span th:text="${unitPrice}">0</span> ·
+                            Total: <strong th:text="${totalPrice}">0</strong>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:18px 32px 28px;background:#f8fafc;border-top:1px solid #e9edf2;">
+                        <p style="margin:0;font-size:12px;color:#6b7785;line-height:1.6;">
+                            Este es un correo automático. No respondas a este mensaje.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
