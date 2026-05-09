@@ -19,7 +19,10 @@ import java.util.Map;
 @Service
 public class QrCodeService {
 
-    public String generatePngBase64(String contents, int width, int height) {
+    /**
+     * Generates a PNG QR code image bytes.
+     */
+    public byte[] generatePng(String contents, int width, int height) {
         if (contents == null || contents.isBlank()) {
             throw new IllegalArgumentException("contents must not be null/blank");
         }
@@ -35,7 +38,7 @@ public class QrCodeService {
 
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
                 MatrixToImageWriter.writeToStream(bitMatrix, "PNG", out);
-                return Base64.getEncoder().encodeToString(out.toByteArray());
+                return out.toByteArray();
             }
         } catch (WriterException e) {
             log.error("Failed to generate QR code", e);
@@ -44,5 +47,12 @@ public class QrCodeService {
             log.error("Failed to serialize QR code as PNG", e);
             throw new IllegalStateException("Failed to serialize QR code", e);
         }
+    }
+
+    /**
+     * Convenience: returns base64 string for the generated PNG.
+     */
+    public String generatePngBase64(String contents, int width, int height) {
+        return Base64.getEncoder().encodeToString(generatePng(contents, width, height));
     }
 }

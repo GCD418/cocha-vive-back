@@ -22,5 +22,5 @@ public interface EmailService {
 
     void sendEmailVerificationEmail(String recipientEmail, String verificationToken);
 
-    void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, String qrCodePngBase64);
+    void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, byte[] qrCodePng);
 }

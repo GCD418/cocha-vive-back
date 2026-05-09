@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -40,7 +41,7 @@ public class TicketService {
     }
 
     @Transactional
-    public void markUsed(Long ticketId) {
+    public void markUsed(UUID ticketId) {
         User actualUser = userService.getActualUser();
         log.info("Marking ticket id: {} as used by organizer id: {}", ticketId, actualUser.getId());
 
@@ -104,8 +105,8 @@ public class TicketService {
         log.info("Ticket created with id: {} for buyer id: {}", saved.getId(), buyer.getId());
 
         String qrPayload = "TICKET:" + saved.getId();
-        String qrBase64 = qrCodeService.generatePngBase64(qrPayload, 240, 240);
-        emailService.sendTicketPurchasedEmail(buyer, saved, qrBase64);
+        byte[] qrPng = qrCodeService.generatePng(qrPayload, 240, 240);
+        emailService.sendTicketPurchasedEmail(buyer, saved, qrPng);
 
         return ticketMapper.toResponseDto(saved);
     }

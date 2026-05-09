@@ -1,9 +1,10 @@
 package cocha.vive.backend.model.dto;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record TicketResponseDTO(
-    Long id,
+    UUID id,
     Integer quantity,
     Long unitPrice,
     Long totalPrice,

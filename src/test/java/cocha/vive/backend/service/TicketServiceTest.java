@@ -20,6 +20,7 @@ import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -55,8 +56,8 @@ class TicketServiceTest {
         User buyer = new User();
         buyer.setId(33L);
 
-        Ticket ticket = Ticket.builder().id(1L).build();
-        TicketResponseDTO dto = new TicketResponseDTO(1L, 1, 100L, 100L, false, 10L, 33L, null);
+        Ticket ticket = Ticket.builder().id(UUID.randomUUID()).build();
+        TicketResponseDTO dto = new TicketResponseDTO(ticket.getId(), 1, 100L, 100L, false, 10L, 33L, null);
 
         when(userService.getActualUser()).thenReturn(buyer);
         when(ticketRepository.findAllByBuyerUserIdIdOrderByCreatedAtDesc(33L))
@@ -80,15 +81,16 @@ class TicketServiceTest {
         event.setDateEnd(LocalDateTime.now().plusDays(1));
 
         Ticket ticket = new Ticket();
-        ticket.setId(5L);
+        UUID ticketId = UUID.randomUUID();
+        ticket.setId(ticketId);
         ticket.setEvent(event);
         ticket.setUsed(false);
 
         when(userService.getActualUser()).thenReturn(organizer);
-        when(ticketRepository.findById(5L)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(ticket)).thenReturn(ticket);
 
-        ticketService.markUsed(5L);
+        ticketService.markUsed(ticketId);
 
         assertThat(ticket.getUsed()).isTrue();
         verify(ticketRepository).save(ticket);
@@ -100,9 +102,10 @@ class TicketServiceTest {
         organizer.setId(10L);
 
         when(userService.getActualUser()).thenReturn(organizer);
-        when(ticketRepository.findById(99L)).thenReturn(Optional.empty());
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> ticketService.markUsed(99L));
+        assertThrows(ResourceNotFoundException.class, () -> ticketService.markUsed(ticketId));
     }
 
     @Test
@@ -117,14 +120,15 @@ class TicketServiceTest {
         event.setOrganizedByUser(organizer);
 
         Ticket ticket = new Ticket();
-        ticket.setId(5L);
+        UUID ticketId = UUID.randomUUID();
+        ticket.setId(ticketId);
         ticket.setEvent(event);
         ticket.setUsed(false);
 
         when(userService.getActualUser()).thenReturn(otherUser);
-        when(ticketRepository.findById(5L)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        assertThrows(AccessDeniedException.class, () -> ticketService.markUsed(5L));
+        assertThrows(AccessDeniedException.class, () -> ticketService.markUsed(ticketId));
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
@@ -137,14 +141,15 @@ class TicketServiceTest {
         event.setOrganizedByUser(organizer);
 
         Ticket ticket = new Ticket();
-        ticket.setId(5L);
+        UUID ticketId = UUID.randomUUID();
+        ticket.setId(ticketId);
         ticket.setEvent(event);
         ticket.setUsed(true);
 
         when(userService.getActualUser()).thenReturn(organizer);
-        when(ticketRepository.findById(5L)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        assertThrows(InvalidStateTransitionException.class, () -> ticketService.markUsed(5L));
+        assertThrows(InvalidStateTransitionException.class, () -> ticketService.markUsed(ticketId));
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
@@ -162,9 +167,10 @@ class TicketServiceTest {
         when(ticket.isExpired()).thenReturn(true);
 
         when(userService.getActualUser()).thenReturn(organizer);
-        when(ticketRepository.findById(5L)).thenReturn(Optional.of(ticket));
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        assertThrows(InvalidStateTransitionException.class, () -> ticketService.markUsed(5L));
+        assertThrows(InvalidStateTransitionException.class, () -> ticketService.markUsed(ticketId));
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
@@ -178,27 +184,29 @@ class TicketServiceTest {
         event.setId(99L);
         event.setTitle("Evento");
 
+        UUID ticketId = UUID.randomUUID();
         Ticket saved = Ticket.builder()
-            .id(123L)
+            .id(ticketId)
             .buyerUserId(buyer)
             .event(event)
             .quantity(2)
-            .unitPrice(100L)
+            .unitPrice(10000L)
             .used(false)
             .build();
 
-        TicketResponseDTO dto = new TicketResponseDTO(123L, 2, 100L, 200L, false, 99L, 33L, null);
+        TicketResponseDTO dto = new TicketResponseDTO(ticketId, 2, 10000L, 20000L, false, 99L, 33L, null);
 
         when(userService.getActualUser()).thenReturn(buyer);
         when(eventRepository.findById(99L)).thenReturn(Optional.of(event));
         when(ticketRepository.save(any(Ticket.class))).thenReturn(saved);
-        when(qrCodeService.generatePngBase64("TICKET:123", 240, 240)).thenReturn("base64");
+        byte[] qr = new byte[] { 1, 2, 3 };
+        when(qrCodeService.generatePng("TICKET:" + ticketId, 240, 240)).thenReturn(qr);
         when(ticketMapper.toResponseDto(saved)).thenReturn(dto);
 
-        TicketResponseDTO result = ticketService.createTicket(99L, 2, 100L);
+        TicketResponseDTO result = ticketService.createTicket(99L, 2, 10000L);
 
-        assertThat(result.id()).isEqualTo(123L);
+        assertThat(result.id()).isEqualTo(ticketId);
         verify(ticketRepository).save(any(Ticket.class));
-        verify(emailService).sendTicketPurchasedEmail(buyer, saved, "base64");
+        verify(emailService).sendTicketPurchasedEmail(buyer, saved, qr);
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -35,9 +36,9 @@ class TicketControllerTest {
         @Test
         void shouldReturnTickets() {
             TicketResponseDTO ticket1 = new TicketResponseDTO(
-                1L, 2, 100L, 200L, false, 10L, 20L, LocalDateTime.now());
+                UUID.randomUUID(), 2, 100L, 200L, false, 10L, 20L, LocalDateTime.now());
             TicketResponseDTO ticket2 = new TicketResponseDTO(
-                2L, 1, 150L, 150L, true, 11L, 21L, LocalDateTime.now());
+                UUID.randomUUID(), 1, 150L, 150L, true, 11L, 21L, LocalDateTime.now());
 
             when(ticketService.getMyTickets()).thenReturn(List.of(ticket1, ticket2));
 
@@ -55,12 +56,13 @@ class TicketControllerTest {
 
         @Test
         void shouldReturnNoContent() {
-            doNothing().when(ticketService).markUsed(5L);
+            UUID ticketId = UUID.randomUUID();
+            doNothing().when(ticketService).markUsed(ticketId);
 
-            ResponseEntity<Void> response = ticketController.markTicketAsUsed(5L);
+            ResponseEntity<Void> response = ticketController.markTicketAsUsed(ticketId);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-            verify(ticketService).markUsed(5L);
+            verify(ticketService).markUsed(ticketId);
         }
     }
 }

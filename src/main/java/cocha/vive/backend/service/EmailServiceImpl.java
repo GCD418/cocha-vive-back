@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -24,6 +25,9 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.format.DateTimeFormatter;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -268,30 +272,54 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async("emailExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, String qrCodePngBase64) {
+    public void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, byte[] qrCodePng) {
         Objects.requireNonNull(recipientUser, "recipientUser must not be null");
         Objects.requireNonNull(ticket, "ticket must not be null");
-        Objects.requireNonNull(qrCodePngBase64, "qrCodePngBase64 must not be null");
+        Objects.requireNonNull(qrCodePng, "qrCodePng must not be null");
 
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("userName", resolveUserDisplayName(recipientUser));
-        variables.put("ticketId", ticket.getId());
-        variables.put("quantity", ticket.getQuantity());
-        variables.put("unitPrice", ticket.getUnitPrice());
-        variables.put("totalPrice", ticket.totalPrice());
-        variables.put("used", ticket.getUsed());
-        variables.put("eventTitle", ticket.getEvent() != null ? ticket.getEvent().getTitle() : "Evento");
-        variables.put("eventDateStart", ticket.getEvent() != null && ticket.getEvent().getDateStart() != null
-            ? DATE_TIME_FORMATTER.format(ticket.getEvent().getDateStart())
-            : "No definido");
-        variables.put("qrDataUri", "data:image/png;base64," + qrCodePngBase64);
+        try {
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("userName", resolveUserDisplayName(recipientUser));
+            variables.put("quantity", ticket.getQuantity());
+            variables.put("unitPrice", formatMoneyFromMinor(ticket.getUnitPrice()));
+            variables.put("totalPrice", formatMoneyFromMinor(ticket.totalPrice()));
+            variables.put("eventTitle", ticket.getEvent() != null ? ticket.getEvent().getTitle() : "Evento");
+            variables.put("eventDateStart", ticket.getEvent() != null && ticket.getEvent().getDateStart() != null
+                ? DATE_TIME_FORMATTER.format(ticket.getEvent().getDateStart())
+                : "No definido");
 
-        EmailRequest request = new EmailRequest(
-            recipientUser.getEmail(),
-            "Tu ticket CochaVive",
-            ""
-        );
+            String htmlBody = renderTemplate(TEMPLATE_TICKET_PURCHASED, variables);
 
-        sendTemplatedEmail(request, TEMPLATE_TICKET_PURCHASED, variables, ticket.getBuyerUserId());
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(appEmailProperties.getFrom());
+            helper.setTo(recipientUser.getEmail());
+            helper.setSubject("Tu ticket CochaVive");
+            helper.setText(htmlBody, true);
+
+            // Many email clients block data URIs; CID inline is more compatible.
+            helper.addInline("ticketQr", new ByteArrayResource(qrCodePng), "image/png");
+
+            mailSender.send(message);
+            persistAuditLog(recipientUser.getEmail(), "Tu ticket CochaVive", TEMPLATE_TICKET_PURCHASED, ticket.getBuyerUserId());
+            log.info("Ticket email queued and audit log stored. to={}, template={}", recipientUser.getEmail(), TEMPLATE_TICKET_PURCHASED);
+        } catch (MailException | MessagingException e) {
+            log.error("Error sending ticket email asynchronously. to={}, template={}", recipientUser.getEmail(), TEMPLATE_TICKET_PURCHASED, e);
+        } catch (Exception e) {
+            log.error("Unexpected error preparing ticket email. to={}, template={}", recipientUser.getEmail(), TEMPLATE_TICKET_PURCHASED, e);
+        }
+    }
+
+    /**
+     * Formats a minor-unit money amount (e.g., stored as value * 100) for display.
+     */
+    private String formatMoneyFromMinor(Long minorAmount) {
+        if (minorAmount == null) {
+            return "-";
+        }
+        BigDecimal value = BigDecimal.valueOf(minorAmount, 2);
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag("es-BO"));
+        DecimalFormat format = new DecimalFormat("#,##0.00", symbols);
+        return "Bs " + format.format(value);
     }
 }

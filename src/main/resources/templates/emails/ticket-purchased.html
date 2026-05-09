@@ -27,20 +27,18 @@
                         </p>
 
                         <div style="margin:18px 0 8px;padding:16px;border:1px solid #e9edf2;border-radius:12px;background:#f8fafc;">
-                            <p style="margin:0 0 8px;font-size:13px;color:#6b7785;">ID de ticket</p>
-                            <p style="margin:0;font-size:18px;font-weight:700;letter-spacing:0.5px;" th:text="${ticketId}">0</p>
-                            <p style="margin:10px 0 0;font-size:13px;color:#6b7785;">Fecha inicio</p>
+                            <p style="margin:0 0 8px;font-size:13px;color:#6b7785;">Fecha inicio</p>
                             <p style="margin:0;font-size:14px;color:#3a4754;" th:text="${eventDateStart}">No definido</p>
                         </div>
 
                         <div style="text-align:center;margin:18px 0 8px;">
-                            <img th:src="${qrDataUri}" alt="QR Ticket" width="220" height="220" style="display:inline-block;border:1px solid #e9edf2;border-radius:12px;background:#ffffff;"/>
+                            <img src="cid:ticketQr" alt="QR Ticket" width="220" height="220" style="display:inline-block;border:1px solid #e9edf2;border-radius:12px;background:#ffffff;"/>
                         </div>
 
                         <p style="margin:14px 0 0;font-size:13px;color:#6b7785;line-height:1.6;">
                             Cantidad: <span th:text="${quantity}">1</span> ·
-                            Precio unitario: <span th:text="${unitPrice}">0</span> ·
-                            Total: <strong th:text="${totalPrice}">0</strong>
+                            Precio unitario: <span th:text="${unitPrice}">Bs 0,00</span> ·
+                            Total: <strong th:text="${totalPrice}">Bs 0,00</strong>
                         </p>
                     </td>
                 </tr>
