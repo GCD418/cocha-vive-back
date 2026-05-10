@@ -2,6 +2,8 @@ package cocha.vive.backend.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +22,8 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @SQLRestriction("is_active = true")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -55,6 +59,14 @@ public class User implements UserDetails {
     @Column(name = "google_provider_id")
     @Schema(description = "Google provider unique identifier", example = "110012341234123412341")
     private String googleProviderId;
+
+    @Column(name = "facebook_provider_id", unique = true)
+    @Schema(description = "Facebook provider unique identifier", example = "123456789012345678901234567890123456")
+    private String facebookProviderId;
+
+    @Column(name = "facebook_page_id", unique = true)
+    @Schema(description = "Facebook page ID associated with the user", example = "123456789012345")
+    private String facebookPageId;
 
     @Column(name = "document_number")
     @Schema(description = "User document number", example = "8349271")
