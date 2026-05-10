@@ -19,9 +19,7 @@ public interface EmailService {
 
     void sendCustomEmail(EmailRequest request, String templateName, User createdByUser);
 
-<<<<<<< HEAD
     void sendPublisherDemotionEmail(User recipientUser, String demotionReason);
-=======
+    
     void sendEmailVerificationEmail(String recipientEmail, String verificationToken);
->>>>>>> master
 }
