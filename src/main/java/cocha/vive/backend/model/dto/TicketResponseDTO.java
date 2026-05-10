@@ -11,6 +11,10 @@ public record TicketResponseDTO(
     Boolean expired,
     Boolean used,
     Long eventId,
+    String eventTitle,
+    String eventCategoryName,
+    LocalDateTime eventDateStart,
+    LocalDateTime eventDateEnd,
     Long buyerUserId,
     LocalDateTime createdAt
 ) {

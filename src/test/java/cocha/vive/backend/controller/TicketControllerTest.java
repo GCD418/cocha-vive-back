@@ -36,9 +36,11 @@ class TicketControllerTest {
         @Test
         void shouldReturnTickets() {
             TicketResponseDTO ticket1 = new TicketResponseDTO(
-                UUID.randomUUID(), 2, 100L, 200L, false, false, 10L, 20L, LocalDateTime.now());
+                UUID.randomUUID(), 2, 100L, 200L, false, false, 10L,
+                "Festival", "Music", LocalDateTime.now(), LocalDateTime.now().plusHours(3), 20L, LocalDateTime.now());
             TicketResponseDTO ticket2 = new TicketResponseDTO(
-                UUID.randomUUID(), 1, 150L, 150L, false, true, 11L, 21L, LocalDateTime.now());
+                UUID.randomUUID(), 1, 150L, 150L, false, true, 11L,
+                "Expo", "Art", LocalDateTime.now(), LocalDateTime.now().plusDays(1), 21L, LocalDateTime.now());
 
             when(ticketService.getMyTickets()).thenReturn(List.of(ticket1, ticket2));
 
