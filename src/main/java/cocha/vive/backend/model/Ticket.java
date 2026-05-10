@@ -31,7 +31,7 @@ public class Ticket {
 
     @Transient
     public Boolean isExpired() {
-        return LocalDateTime.now().isAfter(this.event.getDateEnd());
+        return this.event != null && LocalDateTime.now().isAfter(this.event.getDateEnd());
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
