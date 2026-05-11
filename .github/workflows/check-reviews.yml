@@ -26,17 +26,29 @@ jobs:
             const approvals = reviews.data.filter(r => r.state === 'APPROVED');
 
             const hasCollab = approvals.some(r =>
-              r.author_association === 'MEMBER' || r.author_association === 'OWNER' || r.author_association === 'COLLABORATOR'
+              ['MEMBER', 'OWNER', 'COLLABORATOR'].includes(r.author_association)
             );
 
-            const uniqueApprovers = new Set(approvals.map(r => r.user.login));
+            const uniqueApprovers = [...new Set(approvals.map(r => r.user.login))];
             const totalApprovals = uniqueApprovers.size;
 
-            console.log(`Approved colaborator: ${hasCollab}`);
+            let summary = `### 🔍 Review Status Report\n`;
+            summary += `| Requirement | Status | Details |\n`;
+            summary += `| :--- | :---: | :--- |\n`;
+            summary += `| **Team Collaborator** | ${hasCollab ? '✅' : '⏳'} | ${hasCollab ? 'The board approves it' : 'Waiting for team member'} |\n`;
+            summary += `| **Total Approvals** | ${totalApprovals >= 2 ? '✅' : '⏳'} | ${totalApprovals}/2 reviews received |\n\n`;
+
+            if (totalApprovals > 0) {
+              summary += `**Current Reviewers:** ${uniqueApprovers.join(', ')}`;
+            }
+
+            await core.summary.addRaw(summary).write();
+
+            console.log(`Approved collaborator: ${hasCollab}`);
             console.log(`Unique approvals total: ${totalApprovals}`);
 
             if (hasCollab && totalApprovals >= 2) {
-              console.log("AWESOME, squash is comming");
+              console.log("AWESOME, squash is coming");
             } else {
-              core.setFailed(`Need more revisions: Requires a registered collaborator and somebody else. Actual: ${totalApprovals}/2 (Colab: ${hasCollab})`);
+              core.setFailed("Get to work and approve the PR!!!");
             }
