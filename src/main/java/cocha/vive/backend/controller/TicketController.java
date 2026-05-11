@@ -38,6 +38,23 @@ public class TicketController {
         return ResponseEntity.ok(ticketService.getMyTickets());
     }
 
+    @Operation(summary = "Buy a ticket for an event")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Ticket created successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "Event not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    @PostMapping("/buy")
+    public ResponseEntity<TicketResponseDTO> buyTicket(
+        @Parameter(description = "Event ID") @RequestParam(name = "eventId") Long eventId,
+        @Parameter(description = "Quantity of tickets") @RequestParam Integer quantity
+    ) {
+        return ResponseEntity.status(201).body(ticketService.createTicket(eventId, quantity));
+    }
+
     @Operation(summary = "Mark a ticket as used")
     @ApiResponses({
         @ApiResponse(responseCode = "204", description = "Ticket marked as used"),

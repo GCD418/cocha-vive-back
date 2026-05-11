@@ -53,6 +53,27 @@ class TicketControllerTest {
     }
 
     @Nested
+    @DisplayName("POST /api/tickets/buy")
+    class BuyTicket {
+
+        @Test
+        void shouldCreateTicket() {
+            UUID ticketId = UUID.randomUUID();
+            TicketResponseDTO responseDTO = new TicketResponseDTO(
+                ticketId, 1, 10000L, 10000L, false, false, 10L,
+                "Festival", "Music", LocalDateTime.now(), LocalDateTime.now().plusHours(2), 20L, LocalDateTime.now());
+
+            when(ticketService.createTicket(10L, 1)).thenReturn(responseDTO);
+
+            ResponseEntity<TicketResponseDTO> response = ticketController.buyTicket(10L, 1);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getBody()).isEqualTo(responseDTO);
+            verify(ticketService).createTicket(10L, 1);
+        }
+    }
+
+    @Nested
     @DisplayName("PATCH /api/tickets/{id}/use")
     class MarkTicketAsUsed {
 

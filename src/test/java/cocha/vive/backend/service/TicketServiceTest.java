@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -186,6 +187,7 @@ class TicketServiceTest {
         Event event = new Event();
         event.setId(99L);
         event.setTitle("Evento");
+        event.setCost(10000);
 
         UUID ticketId = UUID.randomUUID();
         Ticket saved = Ticket.builder()
@@ -209,10 +211,12 @@ class TicketServiceTest {
         when(qrCodeService.generatePng("TICKET:" + ticketId, 240, 240)).thenReturn(qr);
         when(ticketMapper.toResponseDto(saved)).thenReturn(dto);
 
-        TicketResponseDTO result = ticketService.createTicket(99L, 2, 10000L);
+        TicketResponseDTO result = ticketService.createTicket(99L, 2);
 
         assertThat(result.id()).isEqualTo(ticketId);
-        verify(ticketRepository).save(any(Ticket.class));
+        ArgumentCaptor<Ticket> ticketCaptor = ArgumentCaptor.forClass(Ticket.class);
+        verify(ticketRepository).save(ticketCaptor.capture());
+        assertThat(ticketCaptor.getValue().getUnitPrice()).isEqualTo(10000L);
         verify(emailService).sendTicketPurchasedEmail(buyer, saved, qr);
     }
 }
