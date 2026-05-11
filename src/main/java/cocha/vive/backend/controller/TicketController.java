@@ -24,6 +24,7 @@ import java.util.UUID;
 @RequestMapping("/api/tickets")
 @RequiredArgsConstructor
 @Tag(name = "Ticket", description = "Ticket operations")
+@PreAuthorize("hasRole('USER')")
 public class TicketController {
 
     private final TicketService ticketService;
