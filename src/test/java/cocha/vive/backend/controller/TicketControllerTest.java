@@ -1,5 +1,6 @@
 package cocha.vive.backend.controller;
 
+import cocha.vive.backend.model.dto.BuyTicketRequestDTO;
 import cocha.vive.backend.model.dto.TicketResponseDTO;
 import cocha.vive.backend.service.TicketService;
 import org.junit.jupiter.api.DisplayName;
@@ -65,7 +66,11 @@ class TicketControllerTest {
 
             when(ticketService.createTicket(10L, 1)).thenReturn(responseDTO);
 
-            ResponseEntity<TicketResponseDTO> response = ticketController.buyTicket(10L, 1);
+            BuyTicketRequestDTO requestDTO = new BuyTicketRequestDTO();
+            requestDTO.setEventId(10L);
+            requestDTO.setQuantity(1);
+
+            ResponseEntity<TicketResponseDTO> response = ticketController.buyTicket(requestDTO);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isEqualTo(responseDTO);

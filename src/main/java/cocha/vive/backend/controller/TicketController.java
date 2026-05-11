@@ -1,5 +1,6 @@
 package cocha.vive.backend.controller;
 
+import cocha.vive.backend.model.dto.BuyTicketRequestDTO;
 import cocha.vive.backend.model.dto.ErrorResponseDTO;
 import cocha.vive.backend.model.dto.TicketResponseDTO;
 import cocha.vive.backend.service.TicketService;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,10 +51,9 @@ public class TicketController {
     })
     @PostMapping("/buy")
     public ResponseEntity<TicketResponseDTO> buyTicket(
-        @Parameter(description = "Event ID") @RequestParam(name = "eventId") Long eventId,
-        @Parameter(description = "Quantity of tickets") @RequestParam Integer quantity
+        @Parameter(description = "Ticket purchase request") @Valid @RequestBody BuyTicketRequestDTO request
     ) {
-        return ResponseEntity.status(201).body(ticketService.createTicket(eventId, quantity));
+        return ResponseEntity.status(201).body(ticketService.createTicket(request.getEventId(), request.getQuantity()));
     }
 
     @Operation(summary = "Mark a ticket as used")
