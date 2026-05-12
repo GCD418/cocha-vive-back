@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - name: Verify approvals
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
             const reviews = await github.rest.pulls.listReviews({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.issue.number,
+              pull_number: context.pull_request.number,
             });
 
             const approvals = reviews.data.filter(r => r.state === 'APPROVED');
@@ -35,7 +35,7 @@ jobs:
             let summary = `### 🔍 Review Status Report\n`;
             summary += `| Requirement | Status | Details |\n`;
             summary += `| :--- | :---: | :--- |\n`;
-            summary += `| **Team Collaborator** | ${hasCollab ? '✅' : '⏳'} | ${hasCollab ? 'The board approves IT' : 'Waiting for team member'} |\n`;
+            summary += `| **Team Collaborator** | ${hasCollab ? '✅' : '⏳'} | ${hasCollab ? 'The BOARD approves it' : 'Waiting for team member'} |\n`;
             summary += `| **Total Approvals** | ${totalApprovals >= 2 ? '✅' : '⏳'} | ${totalApprovals}/2 reviews received |\n\n`;
 
             if (totalApprovals > 0) {
