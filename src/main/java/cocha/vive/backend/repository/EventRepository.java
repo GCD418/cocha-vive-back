@@ -15,7 +15,6 @@ import org.springframework.data.jpa.repository.QueryHints;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
-    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
@@ -25,7 +24,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         """, nativeQuery = true)
     List<Event> findAllPublic();
 
-    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
@@ -36,7 +34,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         """, nativeQuery = true)
     List<Event> findActiveFeatured();
 
-    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
@@ -46,7 +43,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         """, nativeQuery = true)
     List<Event> findActiveUpcoming();
 
-    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
@@ -55,7 +51,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
         """, nativeQuery = true)
     List<Event> findAllByOrganizedByUserId(@Param("userId") Long userId);
 
-    @QueryHints(@QueryHint(name = org.hibernate.jpa.QueryHints.HINT_CACHEABLE, value = "true"))
     @Query(value = """
         SELECT * FROM events
         ORDER BY created_at DESC

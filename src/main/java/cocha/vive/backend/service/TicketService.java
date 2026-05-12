@@ -73,15 +73,11 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketResponseDTO createTicket(Long eventId, Integer quantity, Long unitPrice) {
+    public TicketResponseDTO createTicket(Long eventId, Integer quantity) {
         Objects.requireNonNull(eventId, "eventId must not be null");
         Objects.requireNonNull(quantity, "quantity must not be null");
-        Objects.requireNonNull(unitPrice, "unitPrice must not be null");
         if (quantity <= 0) {
             throw new IllegalArgumentException("quantity must be greater than zero");
-        }
-        if (unitPrice < 0) {
-            throw new IllegalArgumentException("unitPrice must be non-negative");
         }
 
         User buyer = userService.getActualUser();
@@ -92,6 +88,11 @@ public class TicketService {
                 log.warn("Event not found with id: {} for ticket creation", eventId);
                 return new ResourceNotFoundException("Event not found");
             });
+
+        Long unitPrice = event.getCost().longValue();
+        if (unitPrice < 0) {
+            throw new IllegalArgumentException("event cost must be non-negative");
+        }
 
         Ticket ticket = Ticket.builder()
             .event(event)

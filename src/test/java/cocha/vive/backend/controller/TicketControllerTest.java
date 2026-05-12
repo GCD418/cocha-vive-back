@@ -1,5 +1,6 @@
 package cocha.vive.backend.controller;
 
+import cocha.vive.backend.model.dto.BuyTicketRequestDTO;
 import cocha.vive.backend.model.dto.TicketResponseDTO;
 import cocha.vive.backend.service.TicketService;
 import org.junit.jupiter.api.DisplayName;
@@ -36,9 +37,11 @@ class TicketControllerTest {
         @Test
         void shouldReturnTickets() {
             TicketResponseDTO ticket1 = new TicketResponseDTO(
-                UUID.randomUUID(), 2, 100L, 200L, false, false, 10L, 20L, LocalDateTime.now());
+                UUID.randomUUID(), 2, 100L, 200L, false, false, 10L,
+                "Festival", "Music", LocalDateTime.now(), LocalDateTime.now().plusHours(3), 20L, LocalDateTime.now());
             TicketResponseDTO ticket2 = new TicketResponseDTO(
-                UUID.randomUUID(), 1, 150L, 150L, false, true, 11L, 21L, LocalDateTime.now());
+                UUID.randomUUID(), 1, 150L, 150L, false, true, 11L,
+                "Expo", "Art", LocalDateTime.now(), LocalDateTime.now().plusDays(1), 21L, LocalDateTime.now());
 
             when(ticketService.getMyTickets()).thenReturn(List.of(ticket1, ticket2));
 
@@ -47,6 +50,31 @@ class TicketControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).hasSize(2);
             verify(ticketService).getMyTickets();
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/tickets/buy")
+    class BuyTicket {
+
+        @Test
+        void shouldCreateTicket() {
+            UUID ticketId = UUID.randomUUID();
+            TicketResponseDTO responseDTO = new TicketResponseDTO(
+                ticketId, 1, 10000L, 10000L, false, false, 10L,
+                "Festival", "Music", LocalDateTime.now(), LocalDateTime.now().plusHours(2), 20L, LocalDateTime.now());
+
+            when(ticketService.createTicket(10L, 1)).thenReturn(responseDTO);
+
+            BuyTicketRequestDTO requestDTO = new BuyTicketRequestDTO();
+            requestDTO.setEventId(10L);
+            requestDTO.setQuantity(1);
+
+            ResponseEntity<TicketResponseDTO> response = ticketController.buyTicket(requestDTO);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(response.getBody()).isEqualTo(responseDTO);
+            verify(ticketService).createTicket(10L, 1);
         }
     }
 

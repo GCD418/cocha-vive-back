@@ -14,6 +14,10 @@ public interface TicketMapper {
     @Mapping(target = "totalPrice", expression = "java(ticket.totalPrice())")
     @Mapping(target = "expired", expression = "java(ticket.isExpired())")
     @Mapping(target = "eventId", source = "event.id")
+    @Mapping(target = "eventTitle", source = "event.title")
+    @Mapping(target = "eventCategoryName", source = "event.category.name")
+    @Mapping(target = "eventDateStart", source = "event.dateStart")
+    @Mapping(target = "eventDateEnd", source = "event.dateEnd")
     @Mapping(target = "buyerUserId", source = "buyerUserId.id")
     TicketResponseDTO toResponseDto(Ticket ticket);
 

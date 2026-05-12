@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -57,7 +58,10 @@ class TicketServiceTest {
         buyer.setId(33L);
 
         Ticket ticket = Ticket.builder().id(UUID.randomUUID()).build();
-        TicketResponseDTO dto = new TicketResponseDTO(ticket.getId(), 1, 100L, 100L, false, false, 10L, 33L, null);
+        TicketResponseDTO dto = new TicketResponseDTO(
+            ticket.getId(), 1, 100L, 100L, false, false, 10L,
+            "Evento", "Music", LocalDateTime.now(), LocalDateTime.now().plusHours(2), 33L, null
+        );
 
         when(userService.getActualUser()).thenReturn(buyer);
         when(ticketRepository.findAllByBuyerUserIdIdOrderByCreatedAtDesc(33L))
@@ -183,6 +187,7 @@ class TicketServiceTest {
         Event event = new Event();
         event.setId(99L);
         event.setTitle("Evento");
+        event.setCost(10000);
 
         UUID ticketId = UUID.randomUUID();
         Ticket saved = Ticket.builder()
@@ -194,7 +199,10 @@ class TicketServiceTest {
             .used(false)
             .build();
 
-        TicketResponseDTO dto = new TicketResponseDTO(ticketId, 2, 10000L, 20000L, false, false, 99L, 33L, null);
+        TicketResponseDTO dto = new TicketResponseDTO(
+            ticketId, 2, 10000L, 20000L, false, false, 99L,
+            "Evento", "Music", LocalDateTime.now(), LocalDateTime.now().plusHours(2), 33L, null
+        );
 
         when(userService.getActualUser()).thenReturn(buyer);
         when(eventRepository.findById(99L)).thenReturn(Optional.of(event));
@@ -203,10 +211,12 @@ class TicketServiceTest {
         when(qrCodeService.generatePng("TICKET:" + ticketId, 240, 240)).thenReturn(qr);
         when(ticketMapper.toResponseDto(saved)).thenReturn(dto);
 
-        TicketResponseDTO result = ticketService.createTicket(99L, 2, 10000L);
+        TicketResponseDTO result = ticketService.createTicket(99L, 2);
 
         assertThat(result.id()).isEqualTo(ticketId);
-        verify(ticketRepository).save(any(Ticket.class));
+        ArgumentCaptor<Ticket> ticketCaptor = ArgumentCaptor.forClass(Ticket.class);
+        verify(ticketRepository).save(ticketCaptor.capture());
+        assertThat(ticketCaptor.getValue().getUnitPrice()).isEqualTo(10000L);
         verify(emailService).sendTicketPurchasedEmail(buyer, saved, qr);
     }
 }
