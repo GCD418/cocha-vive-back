@@ -26,7 +26,7 @@ jobs:
             const approvals = reviews.data.filter(r => r.state === 'APPROVED');
 
             const hasCollab = approvals.some(r =>
-              ['MEMBER', 'OWNER', 'COLLABORATOR'].includes(r.author_association)
+              r.author_association === 'MEMBER' || r.author_association === 'OWNER' || r.author_association === 'COLLABORATOR'
             );
 
             const uniqueApprovers = new Set(approvals.map(r => r.user.login));
@@ -35,7 +35,7 @@ jobs:
             let summary = `### 🔍 Review Status Report\n`;
             summary += `| Requirement | Status | Details |\n`;
             summary += `| :--- | :---: | :--- |\n`;
-            summary += `| **Team Collaborator** | ${hasCollab ? '✅' : '⏳'} | ${hasCollab ? 'The board approves it' : 'Waiting for team member'} |\n`;
+            summary += `| **Team Collaborator** | ${hasCollab ? '✅' : '⏳'} | ${hasCollab ? 'The board approves IT' : 'Waiting for team member'} |\n`;
             summary += `| **Total Approvals** | ${totalApprovals >= 2 ? '✅' : '⏳'} | ${totalApprovals}/2 reviews received |\n\n`;
 
             if (totalApprovals > 0) {
