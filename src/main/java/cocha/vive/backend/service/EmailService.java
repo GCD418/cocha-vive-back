@@ -20,6 +20,8 @@ public interface EmailService {
 
     void sendCustomEmail(EmailRequest request, String templateName, User createdByUser);
 
+    void sendPublisherDemotionEmail(User recipientUser, String demotionReason);
+    
     void sendEmailVerificationEmail(String recipientEmail, String verificationToken);
 
     void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, byte[] qrCodePng);

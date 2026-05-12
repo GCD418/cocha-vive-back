@@ -46,6 +46,7 @@ public class EmailServiceImpl implements EmailService {
     private static final String TEMPLATE_PUBLISHER_REQUEST_REJECTED = "emails/publisher-request-rejected";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final String TEMPLATE_EMAIL_VERIFICATION = "emails/email-verification";
+    private static final String TEMPLATE_PUBLISHER_DEMOTED = "emails/publisher-demoted";
     private static final String TEMPLATE_TICKET_PURCHASED = "emails/ticket-purchased";
 
     private final JavaMailSender mailSender;
@@ -159,6 +160,26 @@ public class EmailServiceImpl implements EmailService {
         );
 
         sendTemplatedEmail(request, TEMPLATE_PUBLISHER_REQUEST_REJECTED, variables, recipientUser);
+    }
+
+    @Override
+    @Async("emailExecutor")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void sendPublisherDemotionEmail(User recipientUser, String demotionReason) {
+        Objects.requireNonNull(recipientUser, "recipientUser must not be null");
+        Objects.requireNonNull(demotionReason, "demotionReason must not be null");
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("userName", resolveUserDisplayName(recipientUser));
+        variables.put("demotionReason", demotionReason);
+
+        EmailRequest request = new EmailRequest(
+            recipientUser.getEmail(),
+            "Tu acceso como publisher ha sido revocado",
+            ""
+        );
+
+        sendTemplatedEmail(request, TEMPLATE_PUBLISHER_DEMOTED, variables, recipientUser);
     }
 
     @Override

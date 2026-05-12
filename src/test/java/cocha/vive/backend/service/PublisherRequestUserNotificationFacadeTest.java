@@ -99,4 +99,34 @@ class PublisherRequestUserNotificationFacadeTest {
         request.setRejectionReason(rejectionReason);
         return request;
     }
+
+    @Test
+    void notifyDemotedFromPublisher_shouldCreateNotificationAndSendEmailWhenFlagEnabled() {
+        User recipient = user(1L);
+        String demotionReason = "Publisher repeatedly violated content guidelines.";
+
+        when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(true);
+
+        facade.notifyDemotedFromPublisher(recipient, demotionReason);
+
+        verify(notificationService).create(
+            recipient,
+            "Your publisher access has been revoked",
+            demotionReason
+        );
+        verify(emailService).sendPublisherDemotionEmail(recipient, demotionReason);
+    }
+
+    @Test
+    void notifyDemotedFromPublisher_shouldDoNothingWhenFlagDisabled() {
+        User recipient = user(1L);
+        String demotionReason = "Publisher repeatedly violated content guidelines.";
+
+        when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(false);
+
+        facade.notifyDemotedFromPublisher(recipient, demotionReason);
+
+        verify(notificationService, never()).create(any(), anyString(), anyString());
+        verify(emailService, never()).sendPublisherDemotionEmail(any(), anyString());
+    }
 }
