@@ -213,7 +213,7 @@ public class EventService {
 
         return new EventResponseDTO(
             base.id(), base.title(), base.shortDescription(), base.description(),
-            base.cost(), base.categoryId(), base.categoryName(), base.organizedByUserId(),
+            base.cost(), base.categoryId(), base.categoryName(), base.organizedByUserId(), base.organizedByUserName(),
             base.latitude(), base.longitude(), base.shortPlaceDescription(),
             base.peopleCapacity(), base.dateStart(), base.dateEnd(), base.tags(),
             base.photoLinks(), base.eventStatus(), base.isActive(), base.createdAt(),
