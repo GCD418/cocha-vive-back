@@ -1,9 +1,6 @@
 package cocha.vive.backend.service;
 
-import cocha.vive.backend.model.Event;
-import cocha.vive.backend.model.PublisherRequest;
-import cocha.vive.backend.model.User;
-import cocha.vive.backend.model.Ticket;
+import cocha.vive.backend.model.*;
 import cocha.vive.backend.model.dto.EmailRequest;
 
 public interface EmailService {
@@ -21,8 +18,10 @@ public interface EmailService {
     void sendCustomEmail(EmailRequest request, String templateName, User createdByUser);
 
     void sendPublisherDemotionEmail(User recipientUser, String demotionReason);
-    
+
     void sendEmailVerificationEmail(String recipientEmail, String verificationToken);
 
     void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, byte[] qrCodePng);
+
+    void sendEventPromotedEmail(User recipientUser, EventPromotion promotion, byte[] qrCodePng);
 }

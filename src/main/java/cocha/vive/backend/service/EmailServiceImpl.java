@@ -9,6 +9,7 @@ import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.EmailRequest;
 import cocha.vive.backend.repository.EmailAuditLogRepository;
+import cocha.vive.backend.model.EventPromotion;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,7 @@ public class EmailServiceImpl implements EmailService {
     private static final String TEMPLATE_EMAIL_VERIFICATION = "emails/email-verification";
     private static final String TEMPLATE_PUBLISHER_DEMOTED = "emails/publisher-demoted";
     private static final String TEMPLATE_TICKET_PURCHASED = "emails/ticket-purchased";
+    private static final String TEMPLATE_EVENT_PROMOTED = "emails/event-promoted";
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
@@ -330,6 +332,70 @@ public class EmailServiceImpl implements EmailService {
         } catch (Exception e) {
             log.error("Unexpected error preparing ticket email. to={}, template={}", recipientUser.getEmail(), TEMPLATE_TICKET_PURCHASED, e);
         }
+    }
+
+    @Override
+    @Async("emailExecutor")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void sendEventPromotedEmail(User recipientUser, EventPromotion promotion, byte[] qrCodePng) {
+        Objects.requireNonNull(recipientUser, "recipientUser must not be null");
+        Objects.requireNonNull(promotion, "promotion must not be null");
+        Objects.requireNonNull(qrCodePng, "qrCodePng must not be null");
+
+        try {
+            Map<String, Object> variables = new HashMap<>();
+            variables.put("userName", resolveUserDisplayName(recipientUser));
+            variables.put("eventTitle", promotion.getEvent() != null
+                ? promotion.getEvent().getTitle()
+                : "Evento");
+            variables.put("planName", promotion.getPlan() != null
+                ? promotion.getPlan().name()
+                : "-");
+            variables.put("amount", formatPromotionAmount(promotion.getAmount()));
+            variables.put("startAt", promotion.getStartAt() != null
+                ? DATE_TIME_FORMATTER.format(promotion.getStartAt())
+                : "No definido");
+            variables.put("endAt", promotion.getEndAt() != null
+                ? DATE_TIME_FORMATTER.format(promotion.getEndAt())
+                : "No definido");
+
+            String htmlBody = renderTemplate(TEMPLATE_EVENT_PROMOTED, variables);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(appEmailProperties.getFrom());
+            helper.setTo(recipientUser.getEmail());
+            helper.setSubject("Tu evento destacado en CochaVive");
+            helper.setText(htmlBody, true);
+
+            // Many email clients block data URIs; CID inline is more compatible.
+            helper.addInline("promotionQr", new ByteArrayResource(qrCodePng), "image/png");
+
+            mailSender.send(message);
+            persistAuditLog(recipientUser.getEmail(), "Tu evento destacado en CochaVive",
+                TEMPLATE_EVENT_PROMOTED, promotion.getPurchasedByUser());
+            log.info("Promotion email queued and audit log stored. to={}, template={}",
+                recipientUser.getEmail(), TEMPLATE_EVENT_PROMOTED);
+        } catch (MailException | MessagingException e) {
+            log.error("Error sending promotion email asynchronously. to={}, template={}",
+                recipientUser.getEmail(), TEMPLATE_EVENT_PROMOTED, e);
+        } catch (Exception e) {
+            log.error("Unexpected error preparing promotion email. to={}, template={}",
+                recipientUser.getEmail(), TEMPLATE_EVENT_PROMOTED, e);
+        }
+    }
+
+    /**
+     * Formats a promotion amount stored in major currency units (Option A).
+     * Unlike {@link #formatMoneyFromMinor}, this does NOT divide by 100.
+     */
+    private String formatPromotionAmount(Long amount) {
+        if (amount == null) {
+            return "-";
+        }
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag("es-BO"));
+        DecimalFormat format = new DecimalFormat("#,##0", symbols);
+        return "Bs " + format.format(amount);
     }
 
     /**
