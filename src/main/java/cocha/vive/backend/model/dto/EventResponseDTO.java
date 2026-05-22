@@ -12,6 +12,7 @@ public record EventResponseDTO(
     Long categoryId,
     String categoryName,
     Long organizedByUserId,
+    String organizedByUserName,
     Double latitude,
     Double longitude,
     String shortPlaceDescription,

@@ -61,7 +61,7 @@ class EventControllerTest {
         return new EventResponseDTO(
             1L, "Concierto Rock", "Un gran concierto",
             "Descripción completa del concierto", 50,
-            1L, "Music", 10L,
+            1L, "Music", 10L, "Gabriel Perez",
             -17.3895, -66.1568, "Plaza Principal", 500,
             LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusHours(3),
             List.of("música", "rock"), List.of("https://example.com/photo1.jpg"),
