@@ -5,6 +5,7 @@ import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.EventCreateDTO;
 import cocha.vive.backend.model.dto.EventRequest;
+import cocha.vive.backend.model.dto.EventResponseDTO;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -37,4 +38,14 @@ public interface EventMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "photoLinks", ignore = true)
     void updateEventFromRequest(EventRequest dto, @MappingTarget Event event);
+
+    @Mapping(target = "categoryId", source = "category.id")
+    @Mapping(target = "categoryName", source = "category.name")
+    @Mapping(target = "organizedByUserId", source = "organizedByUser.id")
+    @Mapping(target = "eventStatus", expression = "java(event.getEventStatus() != null ? event.getEventStatus().name() : null)")
+    @Mapping(target = "isFeatured", ignore = true)
+    @Mapping(target = "promotionType", ignore = true)
+    @Mapping(target = "promotionSlot", ignore = true)
+    @Mapping(target = "expiresAt", ignore = true)
+    EventResponseDTO toResponseDto(Event event);
 }
