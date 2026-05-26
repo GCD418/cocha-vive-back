@@ -337,27 +337,18 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async("emailExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void sendEventPromotedEmail(User recipientUser, EventPromotion promotion, byte[] qrCodePng) {
+    public void sendEventPromotedEmail(User recipientUser, String eventTitle, String planName,
+                                   Long amount, String startAt, String endAt, byte[] qrCodePng) {
         Objects.requireNonNull(recipientUser, "recipientUser must not be null");
-        Objects.requireNonNull(promotion, "promotion must not be null");
-        Objects.requireNonNull(qrCodePng, "qrCodePng must not be null");
 
         try {
             Map<String, Object> variables = new HashMap<>();
             variables.put("userName", resolveUserDisplayName(recipientUser));
-            variables.put("eventTitle", promotion.getEvent() != null
-                ? promotion.getEvent().getTitle()
-                : "Evento");
-            variables.put("planName", promotion.getPlan() != null
-                ? promotion.getPlan().name()
-                : "-");
-            variables.put("amount", formatPromotionAmount(promotion.getAmount()));
-            variables.put("startAt", promotion.getStartAt() != null
-                ? DATE_TIME_FORMATTER.format(promotion.getStartAt())
-                : "No definido");
-            variables.put("endAt", promotion.getEndAt() != null
-                ? DATE_TIME_FORMATTER.format(promotion.getEndAt())
-                : "No definido");
+            variables.put("eventTitle", eventTitle);
+            variables.put("planName", planName);
+            variables.put("amount", formatPromotionAmount(amount));
+            variables.put("startAt", startAt);
+            variables.put("endAt", endAt);
 
             String htmlBody = renderTemplate(TEMPLATE_EVENT_PROMOTED, variables);
 
@@ -373,7 +364,7 @@ public class EmailServiceImpl implements EmailService {
 
             mailSender.send(message);
             persistAuditLog(recipientUser.getEmail(), "Tu evento destacado en CochaVive",
-                TEMPLATE_EVENT_PROMOTED, promotion.getPurchasedByUser());
+                TEMPLATE_EVENT_PROMOTED, recipientUser);
             log.info("Promotion email queued and audit log stored. to={}, template={}",
                 recipientUser.getEmail(), TEMPLATE_EVENT_PROMOTED);
         } catch (MailException | MessagingException e) {

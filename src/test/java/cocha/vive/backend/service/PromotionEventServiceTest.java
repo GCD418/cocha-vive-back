@@ -112,7 +112,17 @@ class PromotionServiceTest {
             assertThat(captor.getValue().getAmount()).isEqualTo(90L);
             assertThat(captor.getValue().getPlan()).isEqualTo(PromotionPlan.ONE_WEEK);
 
-            verify(emailService).sendEventPromotedEmail(eq(owner), any(EventPromotion.class), eq(qr));
+            // la firma actual de sendEventPromotedEmail acepta 7 argumentos:
+            // (User recipientUser, String eventTitle, String planName, Long amount, String startAt, String endAt, byte[] qrCodePng)
+            verify(emailService).sendEventPromotedEmail(
+                eq(owner),
+                eq(event.getTitle()),
+                eq(PromotionPlan.ONE_WEEK.name()),
+                eq(90L),
+                anyString(),
+                anyString(),
+                eq(qr)
+            );
             verify(notificationService).create(eq(owner), anyString(), anyString());
         }
 

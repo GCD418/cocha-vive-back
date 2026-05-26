@@ -25,7 +25,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllPublic();
 
     @Query(value = """
-        SELECT e.id,
+        SELECT DISTINCT ON (e.id) e.id,
                e.title,
                e.short_description,
                e.description,
@@ -54,7 +54,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
           AND e.date_end > NOW()
           AND p.start_at <= NOW()
           AND p.end_at > NOW()
-        ORDER BY p.end_at ASC, e.id ASC
+        ORDER BY e.id ASC, p.end_at ASC
         """, nativeQuery = true)
     List<Event> findActiveFeatured();
 

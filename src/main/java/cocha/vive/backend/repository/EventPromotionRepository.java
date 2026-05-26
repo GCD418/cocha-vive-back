@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,6 +24,7 @@ public interface EventPromotionRepository extends JpaRepository<EventPromotion, 
         ORDER BY p.endAt DESC
         """)
     Optional<EventPromotion> findActivePromotion(@Param("eventId") Long eventId,
-                                                 @Param("now") LocalDateTime now);
+                                                 @Param("now") LocalDateTime now,
+                                                 Pageable pageable);
 
 }

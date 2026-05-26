@@ -17,6 +17,7 @@ import cocha.vive.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -200,7 +201,11 @@ public class EventService {
         EventResponseDTO base = eventMapper.toResponseDto(event);
 
         Optional<EventPromotion> activePromotion =
-            eventPromotionRepository.findActivePromotion(event.getId(), LocalDateTime.now());
+            eventPromotionRepository.findActivePromotion(
+                event.getId(),
+                LocalDateTime.now(),
+                PageRequest.of(0,1)
+            );
 
         boolean featured = activePromotion.isPresent();
         String type = featured ? "FEATURED" : null;

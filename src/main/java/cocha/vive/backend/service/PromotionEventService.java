@@ -19,12 +19,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PromotionEventService {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final EventPromotionRepository eventPromotionRepository;
     private final EventRepository eventRepository;
@@ -85,7 +89,14 @@ public class PromotionEventService {
 
         String qrPayload = "PROMOTION:" + saved.getId();
         byte[] qrPng = qrCodeService.generatePng(qrPayload, 240, 240);
-        emailService.sendEventPromotedEmail(buyer, saved, qrPng);
+
+        String eventTitle = event.getTitle();
+        String planName = plan.name();
+        String formattedStart = DATE_TIME_FORMATTER.format(saved.getStartAt());
+        String formattedEnd = DATE_TIME_FORMATTER.format(saved.getEndAt());
+
+        emailService.sendEventPromotedEmail(buyer, eventTitle, planName,
+            plan.getAmount(), formattedStart, formattedEnd, qrPng);
 
         notificationService.create(
             buyer,

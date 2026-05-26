@@ -23,5 +23,6 @@ public interface EmailService {
 
     void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, byte[] qrCodePng);
 
-    void sendEventPromotedEmail(User recipientUser, EventPromotion promotion, byte[] qrCodePng);
+    void sendEventPromotedEmail(User recipientUser, String eventTitle, String planName,
+                            Long amount, String startAt, String endAt, byte[] qrCodePng);
 }
