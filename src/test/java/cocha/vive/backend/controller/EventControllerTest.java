@@ -3,6 +3,7 @@ package cocha.vive.backend.controller;
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.EventStatus;
 import cocha.vive.backend.model.dto.EventRequest;
+import cocha.vive.backend.model.dto.EventResponseDTO;
 import cocha.vive.backend.service.EventService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -56,6 +57,19 @@ class EventControllerTest {
             .build();
     }
 
+    private EventResponseDTO buildEventResponseDTO() {
+        return new EventResponseDTO(
+            1L, "Concierto Rock", "Un gran concierto",
+            "Descripción completa del concierto", 50,
+            1L, "Music", 10L, "Gabriel Perez",
+            -17.3895, -66.1568, "Plaza Principal", 500,
+            LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusHours(3),
+            List.of("música", "rock"), List.of("https://example.com/photo1.jpg"),
+            "APPROVED", true, LocalDateTime.now(),
+            false, null, null, null
+        );
+    }
+
     private EventRequest buildEventRequest() {
         EventRequest dto = new EventRequest();
         dto.setTitle("Concierto Rock");
@@ -89,24 +103,22 @@ class EventControllerTest {
         @Test
         @DisplayName("retorna lista de eventos")
         void shouldReturnListOfEvents() {
-            List<Event> events = List.of(buildEvent(), buildEvent());
-            when(eventService.getAllPublic()).thenReturn(events);
+            List<EventResponseDTO> events = List.of(buildEventResponseDTO(), buildEventResponseDTO());
+            when(eventService.toResponseDtoList(any())).thenReturn(events);
 
-            List<Event> response = eventController.getAllEvents();
+            List<EventResponseDTO> response = eventController.getAllEvents();
 
             assertThat(response).hasSize(2);
-            verify(eventService, times(1)).getAllPublic();
         }
 
         @Test
         @DisplayName("retorna lista vacía cuando no hay eventos")
         void shouldReturnEmptyListWhenNoEvents() {
-            when(eventService.getAllPublic()).thenReturn(List.of());
+            when(eventService.toResponseDtoList(any())).thenReturn(List.of());
 
-            List<Event> response = eventController.getAllEvents();
+            List<EventResponseDTO> response = eventController.getAllEvents();
 
             assertThat(response).isEmpty();
-            verify(eventService, times(1)).getAllPublic();
         }
     }
 
@@ -155,17 +167,16 @@ class EventControllerTest {
         @Test
         @DisplayName("200 – retorna evento por id")
         void shouldReturn200WithEventById() {
-            Event event = buildEvent();
-            when(eventService.findById(1L)).thenReturn(event);
+            when(eventService.findById(1L)).thenReturn(buildEvent());
+            when(eventService.toResponseDto(any())).thenReturn(buildEventResponseDTO());
 
-            ResponseEntity<Event> response = eventController.getEventById(1L);
+            ResponseEntity<EventResponseDTO> response = eventController.getEventById(1L);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
-            assertThat(response.getBody().getId()).isEqualTo(1L);
-            assertThat(response.getBody().getTitle()).isEqualTo("Concierto Rock");
-            verify(eventService, times(1)).findById(1L);
-        }
+            assertThat(response.getBody().id()).isEqualTo(1L);
+            assertThat(response.getBody().title()).isEqualTo("Concierto Rock");
+            verify(eventService, times(1)).findById(1L);}
 
         @Test
         @DisplayName("delega al servicio con el id correcto")
@@ -187,21 +198,19 @@ class EventControllerTest {
         @Test
         @DisplayName("retorna lista de eventos próximos")
         void shouldReturnUpcomingEvents() {
-            List<Event> events = List.of(buildEvent());
-            when(eventService.getUpcoming()).thenReturn(events);
+            when(eventService.toResponseDtoList(any())).thenReturn(List.of(buildEventResponseDTO()));
 
-            List<Event> response = eventController.getUpcomingEvents();
+            List<EventResponseDTO> response = eventController.getUpcomingEvents();
 
             assertThat(response).hasSize(1);
-            verify(eventService, times(1)).getUpcoming();
-        }
+            verify(eventService, times(1)).getUpcoming();}
 
         @Test
         @DisplayName("retorna lista vacía cuando no hay eventos próximos")
         void shouldReturnEmptyListWhenNoUpcomingEvents() {
-            when(eventService.getUpcoming()).thenReturn(List.of());
+            when(eventService.toResponseDtoList(any())).thenReturn(List.of());
 
-            List<Event> response = eventController.getUpcomingEvents();
+            List<EventResponseDTO> response = eventController.getUpcomingEvents();
 
             assertThat(response).isEmpty();
         }
@@ -216,21 +225,19 @@ class EventControllerTest {
         @Test
         @DisplayName("retorna lista de eventos destacados")
         void shouldReturnFeaturedEvents() {
-            List<Event> events = List.of(buildEvent());
-            when(eventService.getFeatured()).thenReturn(events);
+            when(eventService.toResponseDtoList(any())).thenReturn(List.of(buildEventResponseDTO()));
 
-            List<Event> response = eventController.getFeaturedEvents();
+            List<EventResponseDTO> response = eventController.getFeaturedEvents();
 
             assertThat(response).hasSize(1);
-            verify(eventService, times(1)).getFeatured();
-        }
+            verify(eventService, times(1)).getFeatured();}
 
         @Test
         @DisplayName("retorna lista vacía cuando no hay eventos destacados")
         void shouldReturnEmptyListWhenNoFeaturedEvents() {
-            when(eventService.getFeatured()).thenReturn(List.of());
+            when(eventService.toResponseDtoList(any())).thenReturn(List.of());
 
-            List<Event> response = eventController.getFeaturedEvents();
+            List<EventResponseDTO> response = eventController.getFeaturedEvents();
 
             assertThat(response).isEmpty();
         }
@@ -273,10 +280,9 @@ class EventControllerTest {
         @Test
         @DisplayName("retorna eventos filtrados por categoría")
         void shouldReturnEventsByCategory() {
-            List<Event> events = List.of(buildEvent());
-            when(eventService.getEventsByCategoryId(1L)).thenReturn(events);
+            when(eventService.toResponseDtoList(any())).thenReturn(List.of(buildEventResponseDTO()));
 
-            List<Event> response = eventController.getEventsByCategory(1L);
+            List<EventResponseDTO> response = eventController.getEventsByCategory(1L);
 
             assertThat(response).hasSize(1);
             verify(eventService, times(1)).getEventsByCategoryId(1L);
@@ -285,9 +291,9 @@ class EventControllerTest {
         @Test
         @DisplayName("retorna lista vacía cuando no hay eventos en esa categoría")
         void shouldReturnEmptyListWhenNoCategoryEvents() {
-            when(eventService.getEventsByCategoryId(anyLong())).thenReturn(List.of());
+            when(eventService.toResponseDtoList(any())).thenReturn(List.of());
 
-            List<Event> response = eventController.getEventsByCategory(99L);
+            List<EventResponseDTO> response = eventController.getEventsByCategory(99L);
 
             assertThat(response).isEmpty();
         }

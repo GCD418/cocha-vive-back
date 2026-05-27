@@ -5,6 +5,7 @@ import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.EventStatus;
 import cocha.vive.backend.model.dto.EventRequest;
+import cocha.vive.backend.model.dto.EventResponseDTO;
 import cocha.vive.backend.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,20 +24,20 @@ public class EventController {
     private final EventService eventService;
 
     @GetMapping("/events")
-    public List<Event> getAllEvents(){
-        return eventService.getAllPublic();
+    public List<EventResponseDTO> getAllEvents(){
+        return eventService.toResponseDtoList(eventService.getAllPublic());
     }
 
     @GetMapping("/events/my-events")
     @PreAuthorize("hasRole('PUBLISHER')")
-    public List<Event> getMyEvents() {
-        return eventService.getMyEvents();
+    public List<EventResponseDTO> getMyEvents() {
+        return eventService.toResponseDtoList(eventService.getMyEvents());
     }
 
     @GetMapping("/events/admin/all")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Event> getAllEventsForAdmin() {
-        return eventService.getAllForAdmin();
+    public List<EventResponseDTO> getAllEventsForAdmin() {
+        return eventService.toResponseDtoList(eventService.getAllForAdmin());
     }
 
     @PostMapping(value = "/events", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -46,20 +47,20 @@ public class EventController {
     }
 
     @GetMapping("/events/{id}")
-    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
-        return ResponseEntity.ok(eventService.findById(id));
+    public ResponseEntity<EventResponseDTO> getEventById(@PathVariable Long id) {
+        return ResponseEntity.ok(eventService.toResponseDto(eventService.findById(id)));
     }
 
     @GetMapping("/events/upcoming")
     @FeatureFlag(AppFeature.VIEW_UPCOMING_EVENTS)
-    public List<Event> getUpcomingEvents(){
-        return eventService.getUpcoming();
+    public List<EventResponseDTO> getUpcomingEvents(){
+        return eventService.toResponseDtoList(eventService.getUpcoming());
     }
 
     @GetMapping("/events/featured")
     @FeatureFlag(AppFeature.VIEW_FEATURED_EVENTS)
-    public List<Event> getFeaturedEvents(){
-        return eventService.getFeatured();
+    public List<EventResponseDTO> getFeaturedEvents(){
+        return eventService.toResponseDtoList(eventService.getFeatured());
     }
 
     @PatchMapping("/events/{id}/cancel")
@@ -69,8 +70,8 @@ public class EventController {
     }
 
     @GetMapping("/events/category/{categoryId}")
-    public List<Event> getEventsByCategory(@PathVariable Long categoryId) {
-        return eventService.getEventsByCategoryId(categoryId);
+    public List<EventResponseDTO> getEventsByCategory(@PathVariable Long categoryId) {
+        return eventService.toResponseDtoList(eventService.getEventsByCategoryId(categoryId));
     }
 
     @PutMapping(value = "/events/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

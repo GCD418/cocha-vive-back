@@ -25,12 +25,36 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllPublic();
 
     @Query(value = """
-        SELECT * FROM events
-        WHERE is_active = true
-          AND is_featured = true
-          AND event_status = 'APPROVED'
-          AND date_end > NOW()
-        ORDER BY date_start ASC
+        SELECT DISTINCT ON (e.id) e.id,
+               e.title,
+               e.short_description,
+               e.description,
+               e.cost,
+               e.category_id,
+               e.organized_by_user_id,
+               e.latitude,
+               e.longitude,
+               e.short_place_description,
+               e.people_capacity,
+               e.date_start,
+               e.date_end,
+               e.tags,
+               e.photo_links,
+               e.is_featured,
+               e.event_status,
+               e.reviewed_by_admin_id,
+               e.created_at,
+               e.updated_at,
+               e.is_active,
+               e.modified_by_user_id
+        FROM events e
+        JOIN event_promotions p ON p.event_id = e.id
+        WHERE e.is_active = true
+          AND e.event_status = 'APPROVED'
+          AND e.date_end > NOW()
+          AND p.start_at <= NOW()
+          AND p.end_at > NOW()
+        ORDER BY e.id ASC, p.end_at ASC
         """, nativeQuery = true)
     List<Event> findActiveFeatured();
 

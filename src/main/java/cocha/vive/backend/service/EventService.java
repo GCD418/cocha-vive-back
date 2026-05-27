@@ -8,12 +8,16 @@ import cocha.vive.backend.model.EventStatus;
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.model.dto.EventRequest;
 import cocha.vive.backend.model.mapper.EventMapper;
+import cocha.vive.backend.model.EventPromotion;
+import cocha.vive.backend.model.dto.EventResponseDTO;
+import cocha.vive.backend.repository.EventPromotionRepository;
 import cocha.vive.backend.repository.CategoryRepository;
 import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.List;
 
 @Slf4j
@@ -36,6 +42,7 @@ public class EventService {
     private final EmailService emailService;
     private final UserService userService;
     private final FeatureToggleService featureToggleService;
+    private final EventPromotionRepository eventPromotionRepository;
 
     public List<Event> getAllPublic(){
         log.debug("Retrieving all public events");
@@ -188,5 +195,38 @@ public class EventService {
         Event updatedEvent = eventRepository.save(event);
         log.info("Event updated successfully with id: {}", updatedEvent.getId());
         return updatedEvent;
+    }
+
+    public EventResponseDTO toResponseDto(Event event) {
+        EventResponseDTO base = eventMapper.toResponseDto(event);
+
+        Optional<EventPromotion> activePromotion =
+            eventPromotionRepository.findActivePromotion(
+                event.getId(),
+                LocalDateTime.now(),
+                PageRequest.of(0,1)
+            );
+
+        boolean featured = activePromotion.isPresent();
+        String type = featured ? "FEATURED" : null;
+        String slot = featured && event.getCategory() != null
+            ? event.getCategory().getName()
+            : null;
+        LocalDateTime expiresAt = activePromotion
+            .map(EventPromotion::getEndAt)
+            .orElse(null);
+
+        return new EventResponseDTO(
+            base.id(), base.title(), base.shortDescription(), base.description(),
+            base.cost(), base.categoryId(), base.categoryName(), base.organizedByUserId(), base.organizedByUserName(),
+            base.latitude(), base.longitude(), base.shortPlaceDescription(),
+            base.peopleCapacity(), base.dateStart(), base.dateEnd(), base.tags(),
+            base.photoLinks(), base.eventStatus(), base.isActive(), base.createdAt(),
+            featured, type, slot, expiresAt
+        );
+    }
+
+    public List<EventResponseDTO> toResponseDtoList(List<Event> events) {
+        return events.stream().map(this::toResponseDto).toList();
     }
 }
