@@ -202,9 +202,10 @@ public class EventService {
 
         Optional<EventPromotion> activePromotion =
             eventPromotionRepository.findActivePromotion(
-                event.getId(), LocalDateTime.now(), PageRequest.of(0,1))
-                    .stream()
-                    .findFirst();
+                event.getId(),
+                LocalDateTime.now(),
+                PageRequest.of(0,1)
+            );
 
         boolean featured = activePromotion.isPresent();
         String type = featured ? "FEATURED" : null;
