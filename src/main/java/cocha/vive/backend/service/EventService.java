@@ -205,7 +205,7 @@ public class EventService {
                 event.getId(),
                 LocalDateTime.now(),
                 PageRequest.of(0,1)
-            ).stream().findFirst();;
+            ).stream().findFirst();
 
         boolean featured = activePromotion.isPresent();
         String type = featured ? "FEATURED" : null;
