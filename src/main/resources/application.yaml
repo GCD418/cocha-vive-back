@@ -100,6 +100,9 @@ app:
       approved-title: "Publisher request approved"
       approved-description: "Now you're a Publisher"
       rejected-title: "Publisher request rejected"
+    event:
+      rejected-title: "Event rejected"
+      rejected-description: "Your event has been rejected"
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
 
 unleash:

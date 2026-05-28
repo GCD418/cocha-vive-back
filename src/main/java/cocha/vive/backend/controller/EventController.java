@@ -4,9 +4,11 @@ import cocha.vive.backend.core.annotations.FeatureFlag;
 import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.EventStatus;
+import cocha.vive.backend.model.dto.EventRejectDTO;
 import cocha.vive.backend.model.dto.EventRequest;
 import cocha.vive.backend.model.dto.EventResponseDTO;
 import cocha.vive.backend.service.EventService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -92,8 +94,9 @@ public class EventController {
 
     @PatchMapping("/events/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> rejectEvent(@PathVariable Long id) {
-        eventService.updateStatus(id, EventStatus.REJECTED);
+    public ResponseEntity<Void> rejectEvent(@PathVariable Long id,
+                                            @RequestBody @Valid EventRejectDTO dto) {
+        eventService.rejectEvent(id, dto);
         return ResponseEntity.noContent().build();
     }
 
