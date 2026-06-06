@@ -46,7 +46,6 @@ public class EmailServiceImpl implements EmailService {
     private static final String TEMPLATE_PUBLISHER_REQUEST_APPROVED = "emails/publisher-request-approved";
     private static final String TEMPLATE_PUBLISHER_REQUEST_REJECTED = "emails/publisher-request-rejected";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private static final String TEMPLATE_EMAIL_VERIFICATION = "emails/email-verification";
     private static final String TEMPLATE_PUBLISHER_DEMOTED = "emails/publisher-demoted";
     private static final String TEMPLATE_TICKET_PURCHASED = "emails/ticket-purchased";
     private static final String TEMPLATE_EVENT_PROMOTED = "emails/event-promoted";
@@ -267,29 +266,6 @@ public class EmailServiceImpl implements EmailService {
             .filter(link -> !link.isBlank())
             .findFirst()
             .orElse(null);
-    }
-
-    @Override
-    @Async("emailExecutor")
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void sendEmailVerificationEmail(String recipientEmail, String verificationToken) {
-        Objects.requireNonNull(recipientEmail, "recipientEmail must not be null");
-        Objects.requireNonNull(verificationToken, "verificationToken must not be null");
-
-        String verificationLink = appProperties.getFrontendUrl()
-            + "/facebook/verify-email?token="
-            + verificationToken;
-
-        Map<String, Object> variables = new HashMap<>();
-        variables.put("verificationLink", verificationLink);
-
-        EmailRequest request = new EmailRequest(
-            recipientEmail,
-            "Verifica tu email en CochaVive",
-            ""
-        );
-
-        sendTemplatedEmail(request, TEMPLATE_EMAIL_VERIFICATION, variables, null);
     }
 
     @Override
