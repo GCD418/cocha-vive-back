@@ -2,7 +2,6 @@ package cocha.vive.backend.auth;
 
 import cocha.vive.backend.model.User;
 import cocha.vive.backend.repository.UserRepository;
-import cocha.vive.backend.service.FacebookAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
