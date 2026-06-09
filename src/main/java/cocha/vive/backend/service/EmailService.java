@@ -19,8 +19,6 @@ public interface EmailService {
 
     void sendPublisherDemotionEmail(User recipientUser, String demotionReason);
 
-    void sendEmailVerificationEmail(String recipientEmail, String verificationToken);
-
     void sendTicketPurchasedEmail(User recipientUser, Ticket ticket, byte[] qrCodePng);
 
     void sendEventPromotedEmail(User recipientUser, String eventTitle, String planName,
