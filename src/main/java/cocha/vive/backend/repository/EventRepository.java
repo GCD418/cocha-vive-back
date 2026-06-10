@@ -15,6 +15,7 @@ import org.springframework.data.jpa.repository.QueryHints;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long> {
+
     @Query(value = """
         SELECT * FROM events
         WHERE is_active = true
@@ -25,28 +26,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllPublic();
 
     @Query(value = """
-        SELECT DISTINCT ON (e.id) e.id,
-               e.title,
-               e.short_description,
-               e.description,
-               e.cost,
-               e.category_id,
-               e.organized_by_user_id,
-               e.latitude,
-               e.longitude,
-               e.short_place_description,
-               e.people_capacity,
-               e.date_start,
-               e.date_end,
-               e.tags,
-               e.photo_links,
-               e.is_featured,
-               e.event_status,
-               e.reviewed_by_admin_id,
-               e.created_at,
-               e.updated_at,
-               e.is_active,
-               e.modified_by_user_id
+        SELECT DISTINCT ON (e.id) e.*
         FROM events e
         JOIN event_promotions p ON p.event_id = e.id
         WHERE e.is_active = true
