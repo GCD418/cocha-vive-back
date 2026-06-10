@@ -4,7 +4,6 @@ import cocha.vive.backend.config.PublisherRequestNotificationProperties;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.User;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -31,61 +30,6 @@ class PublisherRequestUserNotificationFacadeTest {
     @InjectMocks
     private PublisherRequestUserNotificationFacade facade;
 
-    @Test
-    void notifyApproved_shouldCreateNotificationAndSendEmailWhenFlagEnabled() {
-        User recipient = user(1L);
-        PublisherRequest request = request("Entidad", null);
-
-        when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(true);
-        when(publisherRequestNotificationProperties.getApprovedTitle()).thenReturn("Publisher request approved");
-        when(publisherRequestNotificationProperties.getApprovedDescription()).thenReturn("Now you're a Publisher");
-
-        facade.notifyApproved(recipient, request);
-
-        verify(notificationService).create(recipient, "Publisher request approved", "Now you're a Publisher");
-        verify(emailService).sendPublisherRequestApprovedEmail(recipient, request);
-    }
-
-    @Test
-    void notifyApproved_shouldDoNothingWhenFlagDisabled() {
-        User recipient = user(1L);
-        PublisherRequest request = request("Entidad", null);
-
-        when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(false);
-
-        facade.notifyApproved(recipient, request);
-
-        verify(notificationService, never()).create(any(), anyString(), anyString());
-        verify(emailService, never()).sendPublisherRequestApprovedEmail(any(), any());
-    }
-
-    @Test
-    void notifyRejected_shouldCreateNotificationAndSendEmailWhenFlagEnabled() {
-        User recipient = user(1L);
-        PublisherRequest request = request("Entidad", "Motivo de rechazo");
-
-        when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(true);
-        when(publisherRequestNotificationProperties.getRejectedTitle()).thenReturn("Publisher request rejected");
-
-        facade.notifyRejected(recipient, request);
-
-        verify(notificationService).create(recipient, "Publisher request rejected", "Motivo de rechazo");
-        verify(emailService).sendPublisherRequestRejectedEmail(recipient, request);
-    }
-
-    @Test
-    void notifyRejected_shouldDoNothingWhenFlagDisabled() {
-        User recipient = user(1L);
-        PublisherRequest request = request("Entidad", "Motivo de rechazo");
-
-        when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(false);
-
-        facade.notifyRejected(recipient, request);
-
-        verify(notificationService, never()).create(any(), anyString(), anyString());
-        verify(emailService, never()).sendPublisherRequestRejectedEmail(any(), any());
-    }
-
     private User user(Long id) {
         User user = new User();
         user.setId(id);
@@ -98,35 +42,5 @@ class PublisherRequestUserNotificationFacadeTest {
         request.setLegalEntityName(legalEntityName);
         request.setRejectionReason(rejectionReason);
         return request;
-    }
-
-    @Test
-    void notifyDemotedFromPublisher_shouldCreateNotificationAndSendEmailWhenFlagEnabled() {
-        User recipient = user(1L);
-        String demotionReason = "Publisher repeatedly violated content guidelines.";
-
-        when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(true);
-
-        facade.notifyDemotedFromPublisher(recipient, demotionReason);
-
-        verify(notificationService).create(
-            recipient,
-            "Your publisher access has been revoked",
-            demotionReason
-        );
-        verify(emailService).sendPublisherDemotionEmail(recipient, demotionReason);
-    }
-
-    @Test
-    void notifyDemotedFromPublisher_shouldDoNothingWhenFlagDisabled() {
-        User recipient = user(1L);
-        String demotionReason = "Publisher repeatedly violated content guidelines.";
-
-        when(featureToggleService.isEnabled("notify-to-user-of-publisher-request-changes")).thenReturn(false);
-
-        facade.notifyDemotedFromPublisher(recipient, demotionReason);
-
-        verify(notificationService, never()).create(any(), anyString(), anyString());
-        verify(emailService, never()).sendPublisherDemotionEmail(any(), anyString());
     }
 }

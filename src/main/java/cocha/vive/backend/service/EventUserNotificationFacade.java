@@ -1,7 +1,6 @@
 package cocha.vive.backend.service;
 
 import cocha.vive.backend.config.EventNotificationProperties;
-import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.User;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +18,6 @@ public class EventUserNotificationFacade {
     private final EventNotificationProperties eventNotificationProperties;
 
     public void notifyRejected(User recipientUser, Event event) {
-        if (!isEnabled()) {
-            log.debug("Skipping rejected event notification for user id {} because feature flag is OFF",
-                recipientUser != null ? recipientUser.getId() : null);
-            return;
-        }
-
         notificationService.create(
             recipientUser,
             eventNotificationProperties.getRejectedTitle(),
@@ -33,7 +26,4 @@ public class EventUserNotificationFacade {
         emailService.sendEventRejectedEmail(recipientUser, event);
     }
 
-    private boolean isEnabled() {
-        return featureToggleService.isEnabled(AppFeature.NOTIFY_TO_USER_OF_EVENT_CHANGES.getUnleashKey());
-    }
 }
