@@ -60,7 +60,6 @@ public class EventController {
     }
 
     @GetMapping("/events/featured")
-    @FeatureFlag(AppFeature.VIEW_FEATURED_EVENTS)
     public List<EventResponseDTO> getFeaturedEvents(){
         return eventService.toResponseDtoList(eventService.getFeatured());
     }
