@@ -266,6 +266,56 @@ class EmailServiceImplTest {
             new EmailRequest("test@mail.com", "s", "b"), null, null));
     }
 
+    @Test
+    @DisplayName("sendEventRejectedEmail should fill expected variables with rejection reason")
+    void sendEventRejectedEmail_shouldFillExpectedVariablesWithReason() {
+        User recipient = user(9L, "María", "Sosa", "maria@mail.com", "ROLE_PUBLISHER");
+
+        Event event = new Event();
+        event.setTitle("Festival Cultural");
+        event.setRejectionReason("Documentación incompleta");
+
+        when(appEmailProperties.getFrom()).thenReturn("no-reply@cochavive.com");
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        when(templateEngine.process(eq("emails/event-rejected"), any(Context.class)))
+            .thenReturn("<html>event-rejected</html>");
+
+        emailService.sendEventRejectedEmail(recipient, event);
+
+        ArgumentCaptor<Context> contextCaptor = ArgumentCaptor.forClass(Context.class);
+        verify(templateEngine).process(eq("emails/event-rejected"), contextCaptor.capture());
+        Context context = contextCaptor.getValue();
+
+        assertThat(context.getVariable("userName")).isEqualTo("María Sosa");
+        assertThat(context.getVariable("eventTitle")).isEqualTo("Festival Cultural");
+        assertThat(context.getVariable("rejectionReason")).isEqualTo("Documentación incompleta");
+    }
+
+    @Test
+    @DisplayName("sendEventRejectedEmail should set null rejection reason when event has none")
+    void sendEventRejectedEmail_shouldSetNullReasonWhenNone() {
+        User recipient = user(9L, "María", "Sosa", "maria@mail.com", "ROLE_PUBLISHER");
+
+        Event event = new Event();
+        event.setTitle("Concierto Rock");
+        event.setRejectionReason(null);
+
+        when(appEmailProperties.getFrom()).thenReturn("no-reply@cochavive.com");
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        when(templateEngine.process(eq("emails/event-rejected"), any(Context.class)))
+            .thenReturn("<html>event-rejected</html>");
+
+        emailService.sendEventRejectedEmail(recipient, event);
+
+        ArgumentCaptor<Context> contextCaptor = ArgumentCaptor.forClass(Context.class);
+        verify(templateEngine).process(eq("emails/event-rejected"), contextCaptor.capture());
+        Context context = contextCaptor.getValue();
+
+        assertThat(context.getVariable("userName")).isEqualTo("María Sosa");
+        assertThat(context.getVariable("eventTitle")).isEqualTo("Concierto Rock");
+        assertThat(context.getVariable("rejectionReason")).isNull();
+    }
+
     private User user(Long id, String names, String firstLastName, String email, String role) {
         User user = new User();
         user.setId(id);

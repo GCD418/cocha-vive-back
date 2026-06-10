@@ -1,7 +1,9 @@
 package cocha.vive.backend.service;
 
+import cocha.vive.backend.exception.InvalidStateTransitionException;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.*;
+import cocha.vive.backend.model.dto.EventRejectDTO;
 import cocha.vive.backend.model.dto.EventRequest;
 import cocha.vive.backend.model.mapper.EventMapper;
 import cocha.vive.backend.repository.CategoryRepository;
@@ -9,6 +11,8 @@ import cocha.vive.backend.repository.EventRepository;
 import cocha.vive.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +59,9 @@ class EventServiceTest {
 
     @Mock
     private FeatureToggleService featureToggleService;
+
+    @Mock
+    private EventUserNotificationFacade eventUserNotificationFacade;
 
     @InjectMocks
     private EventService eventService;
@@ -436,5 +444,120 @@ class EventServiceTest {
         Event result = eventService.update(1L, new EventRequest(), List.of());
 
         assertEquals(99L, result.getModifiedByUserId());
+    }
+
+    // ─── rejectEvent tests ───────────────────────────────────────────────────────
+
+    /**
+     * Helper: create an organiser user with minimal fields set.
+     */
+    private User organiserUser(Long id) {
+        User user = new User();
+        user.setId(id);
+        user.setEmail("org" + id + "@mail.com");
+        return user;
+    }
+
+    /**
+     * Helper: create a minimal PENDING event owned by the given organiser.
+     */
+    private Event pendingEvent(Long eventId, User organiser) {
+        Event event = new Event();
+        event.setId(eventId);
+        event.setTitle("Event " + eventId);
+        event.setEventStatus(EventStatus.PENDING);
+        event.setOrganizedByUser(organiser);
+        return event;
+    }
+
+    @Nested
+    @DisplayName("rejectEvent")
+    class RejectEvent {
+
+        @Test
+        @DisplayName("rejects PENDING event with reason and notifies organiser")
+        void shouldRejectPendingEventWithReasonAndNotify() {
+            Long adminId = 10L;
+            User organiser = organiserUser(2L);
+            Event event = pendingEvent(1L, organiser);
+
+            EventRejectDTO dto = new EventRejectDTO("Incomplete documentation");
+
+            when(auditService.getActualUserId()).thenReturn(adminId);
+            when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+            when(eventRepository.save(any(Event.class))).thenAnswer(i -> i.getArgument(0));
+
+            eventService.rejectEvent(1L, dto);
+
+            assertEquals(EventStatus.REJECTED, event.getEventStatus());
+            assertEquals("Incomplete documentation", event.getRejectionReason());
+            assertEquals(adminId, event.getModifiedByUserId());
+            verify(eventRepository).save(event);
+            verify(eventUserNotificationFacade).notifyRejected(organiser, event);
+        }
+
+        @Test
+        @DisplayName("rejects PENDING event with null DTO (optional reason)")
+        void shouldRejectPendingEventWithNullDto() {
+            Long adminId = 10L;
+            User organiser = organiserUser(2L);
+            Event event = pendingEvent(1L, organiser);
+
+            when(auditService.getActualUserId()).thenReturn(adminId);
+            when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+            when(eventRepository.save(any(Event.class))).thenAnswer(i -> i.getArgument(0));
+
+            eventService.rejectEvent(1L, null);
+
+            assertEquals(EventStatus.REJECTED, event.getEventStatus());
+            assertNull(event.getRejectionReason());
+            assertEquals(adminId, event.getModifiedByUserId());
+            verify(eventRepository).save(event);
+            verify(eventUserNotificationFacade).notifyRejected(organiser, event);
+        }
+
+        @Test
+        @DisplayName("rejects PENDING event with DTO having null rejectionReason")
+        void shouldRejectPendingEventWithNullReasonInDto() {
+            Long adminId = 10L;
+            User organiser = organiserUser(2L);
+            Event event = pendingEvent(1L, organiser);
+
+            EventRejectDTO dto = new EventRejectDTO(null);
+
+            when(auditService.getActualUserId()).thenReturn(adminId);
+            when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+            when(eventRepository.save(any(Event.class))).thenAnswer(i -> i.getArgument(0));
+
+            eventService.rejectEvent(1L, dto);
+
+            assertEquals(EventStatus.REJECTED, event.getEventStatus());
+            assertNull(event.getRejectionReason());
+            verify(eventUserNotificationFacade).notifyRejected(organiser, event);
+        }
+
+        @Test
+        @DisplayName("throws ResourceNotFoundException when event does not exist")
+        void shouldThrowWhenEventNotFound() {
+            when(eventRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThrows(ResourceNotFoundException.class,
+                () -> eventService.rejectEvent(99L, new EventRejectDTO()));
+            verify(eventRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("throws InvalidStateTransitionException when event is not PENDING")
+        void shouldThrowWhenEventIsNotPending() {
+            User organiser = organiserUser(2L);
+            Event event = pendingEvent(1L, organiser);
+            event.setEventStatus(EventStatus.APPROVED);
+
+            when(eventRepository.findById(1L)).thenReturn(Optional.of(event));
+
+            assertThrows(InvalidStateTransitionException.class,
+                () -> eventService.rejectEvent(1L, new EventRejectDTO("too late")));
+            verify(eventRepository, never()).save(any());
+        }
     }
 }

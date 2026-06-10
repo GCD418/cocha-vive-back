@@ -2,6 +2,7 @@ package cocha.vive.backend.controller;
 
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.EventStatus;
+import cocha.vive.backend.model.dto.EventRejectDTO;
 import cocha.vive.backend.model.dto.EventRequest;
 import cocha.vive.backend.model.dto.EventResponseDTO;
 import cocha.vive.backend.service.EventService;
@@ -345,6 +346,48 @@ class EventControllerTest {
             eventController.updateEvent(5L, dto, images);
 
             verify(eventService).update(eq(5L), eq(dto), eq(images));
+        }
+    }
+
+    // ─── PATCH /api/events/{id}/reject ───────────────────────────────────────────
+
+    @Nested
+    @DisplayName("PATCH /api/events/{id}/reject")
+    class RejectEvent {
+
+        @Test
+        @DisplayName("204 – rejects event with valid DTO and delegates to service")
+        void shouldReturn204AndDelegateToService() {
+            EventRejectDTO dto = new EventRejectDTO("Incomplete information");
+            doNothing().when(eventService).rejectEvent(1L, dto);
+
+            ResponseEntity<Void> response = eventController.rejectEvent(1L, dto);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(eventService, times(1)).rejectEvent(1L, dto);
+        }
+
+        @Test
+        @DisplayName("204 – rejects event with empty DTO (null rejectionReason)")
+        void shouldReturn204WithEmptyDto() {
+            EventRejectDTO dto = new EventRejectDTO(null);
+            doNothing().when(eventService).rejectEvent(2L, dto);
+
+            ResponseEntity<Void> response = eventController.rejectEvent(2L, dto);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(eventService, times(1)).rejectEvent(2L, dto);
+        }
+
+        @Test
+        @DisplayName("delega al servicio con el id y dto correctos")
+        void shouldDelegateToServiceWithCorrectIdAndDto() {
+            EventRejectDTO dto = new EventRejectDTO("reason");
+            doNothing().when(eventService).rejectEvent(anyLong(), any(EventRejectDTO.class));
+
+            eventController.rejectEvent(42L, dto);
+
+            verify(eventService).rejectEvent(42L, dto);
         }
     }
 }

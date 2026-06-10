@@ -1,11 +1,13 @@
 package cocha.vive.backend.service;
 
 import cocha.vive.backend.core.enums.AppFeature;
+import cocha.vive.backend.exception.InvalidStateTransitionException;
 import cocha.vive.backend.exception.ResourceNotFoundException;
 import cocha.vive.backend.model.Category;
 import cocha.vive.backend.model.Event;
 import cocha.vive.backend.model.EventStatus;
 import cocha.vive.backend.model.User;
+import cocha.vive.backend.model.dto.EventRejectDTO;
 import cocha.vive.backend.model.dto.EventRequest;
 import cocha.vive.backend.model.mapper.EventMapper;
 import cocha.vive.backend.model.EventPromotion;
@@ -42,6 +44,7 @@ public class EventService {
     private final EmailService emailService;
     private final UserService userService;
     private final FeatureToggleService featureToggleService;
+    private final EventUserNotificationFacade eventUserNotificationFacade;
     private final EventPromotionRepository eventPromotionRepository;
 
     public List<Event> getAllPublic(){
@@ -139,6 +142,31 @@ public class EventService {
     public void cancelEvent(Long eventId) {
         log.info("Cancelling event with id: {}", eventId);
         updateStatus(eventId, EventStatus.CANCELLED);
+    }
+
+    @Transactional
+    public void rejectEvent(Long eventId, EventRejectDTO dto) {
+        Long actualUserId = auditService.getActualUserId();
+        log.info("Rejecting event with id: {} by admin id: {}", eventId, actualUserId);
+
+        Event event = findById(eventId);
+
+        if (event.getEventStatus() != EventStatus.PENDING) {
+            log.warn("Cannot reject event id: {} with status: {}", eventId, event.getEventStatus());
+            throw new InvalidStateTransitionException(
+                "Only PENDING events can be rejected. Current status: " + event.getEventStatus()
+            );
+        }
+
+        event.setEventStatus(EventStatus.REJECTED);
+        event.setRejectionReason(dto != null ? dto.getRejectionReason() : null);
+        event.setModifiedByUserId(actualUserId);
+
+        eventRepository.save(event);
+        log.info("Event rejected with id: {}", event.getId());
+
+        User organizedByUser = event.getOrganizedByUser();
+        eventUserNotificationFacade.notifyRejected(organizedByUser, event);
     }
 
     public List<Event> getEventsByCategoryId(Long categoryId) {

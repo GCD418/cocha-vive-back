@@ -49,6 +49,7 @@ public class EmailServiceImpl implements EmailService {
     private static final String TEMPLATE_PUBLISHER_DEMOTED = "emails/publisher-demoted";
     private static final String TEMPLATE_TICKET_PURCHASED = "emails/ticket-purchased";
     private static final String TEMPLATE_EVENT_PROMOTED = "emails/event-promoted";
+    private static final String TEMPLATE_EVENT_REJECTED = "emails/event-rejected";
 
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
@@ -161,6 +162,27 @@ public class EmailServiceImpl implements EmailService {
         );
 
         sendTemplatedEmail(request, TEMPLATE_PUBLISHER_REQUEST_REJECTED, variables, recipientUser);
+    }
+
+    @Override
+    @Async("emailExecutor")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void sendEventRejectedEmail(User recipientUser, Event event) {
+        Objects.requireNonNull(recipientUser, "recipientUser must not be null");
+        Objects.requireNonNull(event, "event must not be null");
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("userName", resolveUserDisplayName(recipientUser));
+        variables.put("eventTitle", event.getTitle());
+        variables.put("rejectionReason", event.getRejectionReason());
+
+        EmailRequest request = new EmailRequest(
+            recipientUser.getEmail(),
+            "Evento rechazado",
+            ""
+        );
+
+        sendTemplatedEmail(request, TEMPLATE_EVENT_REJECTED, variables, recipientUser);
     }
 
     @Override

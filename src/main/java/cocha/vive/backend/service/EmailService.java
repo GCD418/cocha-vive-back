@@ -23,4 +23,6 @@ public interface EmailService {
 
     void sendEventPromotedEmail(User recipientUser, String eventTitle, String planName,
                             Long amount, String startAt, String endAt, byte[] qrCodePng);
+
+    void sendEventRejectedEmail(User recipientUser, Event event);
 }
