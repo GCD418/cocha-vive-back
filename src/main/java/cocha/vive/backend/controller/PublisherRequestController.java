@@ -1,7 +1,5 @@
 package cocha.vive.backend.controller;
 
-import cocha.vive.backend.core.annotations.FeatureFlag;
-import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.dto.PublisherRequestCreateDTO;
 import cocha.vive.backend.model.dto.PublisherRequestRejectDTO;
 import cocha.vive.backend.model.dto.PublisherRequestResponseDTO;
@@ -23,7 +21,7 @@ import java.util.List;
 @RequestMapping("/api/publisher-requests")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
-@FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
+
 public class PublisherRequestController {
 
     private final PublisherRequestService publisherRequestService;
