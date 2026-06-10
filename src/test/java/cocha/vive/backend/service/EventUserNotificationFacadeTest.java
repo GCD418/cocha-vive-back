@@ -57,7 +57,6 @@ class EventUserNotificationFacadeTest {
         User recipient = user(1L);
         Event event = event("Concierto Rock", "Incomplete information");
 
-        when(featureToggleService.isEnabled("notify-to-user-of-event-changes")).thenReturn(true);
         when(eventNotificationProperties.getRejectedTitle()).thenReturn("Event rejected");
 
         facade.notifyRejected(recipient, event);
@@ -72,7 +71,6 @@ class EventUserNotificationFacadeTest {
         User recipient = user(1L);
         Event event = event("Concierto", null);
 
-        when(featureToggleService.isEnabled("notify-to-user-of-event-changes")).thenReturn(true);
         when(eventNotificationProperties.getRejectedTitle()).thenReturn("Event rejected");
 
         facade.notifyRejected(recipient, event);
@@ -81,17 +79,4 @@ class EventUserNotificationFacadeTest {
         verify(emailService).sendEventRejectedEmail(recipient, event);
     }
 
-    @Test
-    @DisplayName("should do nothing when flag is OFF")
-    void notifyRejected_shouldDoNothingWhenFlagDisabled() {
-        User recipient = user(1L);
-        Event event = event("Concierto", "reason");
-
-        when(featureToggleService.isEnabled("notify-to-user-of-event-changes")).thenReturn(false);
-
-        facade.notifyRejected(recipient, event);
-
-        verify(notificationService, never()).create(any(), anyString(), anyString());
-        verify(emailService, never()).sendEventRejectedEmail(any(), any());
-    }
 }
