@@ -1,7 +1,6 @@
 package cocha.vive.backend.service;
 
 import cocha.vive.backend.config.PublisherRequestNotificationProperties;
-import cocha.vive.backend.core.enums.AppFeature;
 import cocha.vive.backend.model.PublisherRequest;
 import cocha.vive.backend.model.User;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +19,6 @@ public class PublisherRequestUserNotificationFacade {
     private static final String DEMOTED_FROM_PUBLISHER_TITLE = "Your publisher access has been revoked";
 
     public void notifyApproved(User recipientUser, PublisherRequest publisherRequest) {
-        if (!isEnabled()) {
-            log.debug("Skipping approved publisher request notification for user id {} because feature flag is OFF",
-                recipientUser != null ? recipientUser.getId() : null);
-            return;
-        }
-
         notificationService.create(
             recipientUser,
             publisherRequestNotificationProperties.getApprovedTitle(),
@@ -35,12 +28,6 @@ public class PublisherRequestUserNotificationFacade {
     }
 
     public void notifyRejected(User recipientUser, PublisherRequest publisherRequest) {
-        if (!isEnabled()) {
-            log.debug("Skipping rejected publisher request notification for user id {} because feature flag is OFF",
-                recipientUser != null ? recipientUser.getId() : null);
-            return;
-        }
-
         notificationService.create(
             recipientUser,
             publisherRequestNotificationProperties.getRejectedTitle(),
@@ -50,21 +37,11 @@ public class PublisherRequestUserNotificationFacade {
     }
 
     public void notifyDemotedFromPublisher(User recipient, String demotionReason) {
-        if (!isEnabled()) {
-            log.debug("Skipping publisher demotion notification for user id {} because feature flag is OFF",
-                recipient != null ? recipient.getId() : null);
-            return;
-        }
-
         notificationService.create(
             recipient,
             DEMOTED_FROM_PUBLISHER_TITLE,
             demotionReason
         );
         emailService.sendPublisherDemotionEmail(recipient, demotionReason);
-    }
-
-    private boolean isEnabled() {
-        return featureToggleService.isEnabled(AppFeature.NOTIFY_TO_USER_OF_PUBLISHER_REQUEST_CHANGES.getUnleashKey());
     }
 }

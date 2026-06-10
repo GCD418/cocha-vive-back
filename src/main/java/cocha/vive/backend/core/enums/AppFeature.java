@@ -11,9 +11,7 @@ public enum AppFeature {
     MANAGE_PUBLISHER_REQUESTS("manage-publisher-requests"),
     SEND_WELCOME_EMAIL("send-welcome-email"),
     SEND_NEW_EVENT_NOTIFICATION_EMAIL("send-new-event-notification-email"),
-    SEND_NEW_PUBLISHER_REQUEST_NOTIFICATION_EMAIL("send-new-publisher-request-notification-email"),
-    NOTIFY_TO_USER_OF_PUBLISHER_REQUEST_CHANGES("notify-to-user-of-publisher-request-changes");
-
+    SEND_NEW_PUBLISHER_REQUEST_NOTIFICATION_EMAIL("send-new-publisher-request-notification-email");
     private final String unleashKey;
 
 }
