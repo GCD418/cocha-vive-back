@@ -35,10 +35,9 @@ public class PublisherRequestService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final EmailService emailService;
-    private final FeatureToggleService featureToggleService;
     private final PublisherRequestUserNotificationFacade publisherRequestUserNotificationFacade;
 
-        public List<PublisherRequestResponseDTO> getAll() {
+    public List<PublisherRequestResponseDTO> getAll() {
         log.debug("Retrieving all publisher requests ordered by createdAt ASC");
         List<PublisherRequest> requests = publisherRequestRepository.findAllByOrderByCreatedAtAsc();
         log.debug("Retrieved {} publisher request(s) ordered by createdAt ASC", requests.size());
@@ -111,12 +110,9 @@ public class PublisherRequestService {
         publisherRequest.setCreatedByUserId(actualUser);
         PublisherRequest savedRequest = publisherRequestRepository.save(publisherRequest);
         log.info("Publisher request created with id: {} by user id: {}", savedRequest.getId(), actualUserId);
-
-        if (featureToggleService.isEnabled(AppFeature.SEND_NEW_PUBLISHER_REQUEST_NOTIFICATION_EMAIL.getUnleashKey())) {
-            userService.getAllAdmins().forEach(admin ->
+        userService.getAllAdmins().forEach(admin ->
                 emailService.sendNewConvertToPublisherRequestEmail(admin, savedRequest)
             );
-        }
 
         return publisherRequestMapper.toResponseDto(savedRequest);
     }

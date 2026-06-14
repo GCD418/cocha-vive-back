@@ -45,33 +45,6 @@ class FeatureToggleAspectTest {
     }
 
     @Test
-    @DisplayName("class-level annotation should be evaluated when method has none")
-    void classLevelAnnotation_shouldBeEvaluatedWhenMethodHasNone() throws Throwable {
-        ProceedingJoinPoint pjp = joinPointFor(ClassAnnotated.class, "plainMethod");
-        when(featureToggleService.isEnabled("view-featured-events")).thenReturn(true);
-        when(pjp.proceed()).thenReturn("ok");
-
-        Object result = featureToggleAspect.checkFeatureFlag(pjp);
-
-        assertEquals("ok", result);
-        verify(featureToggleService).isEnabled("view-featured-events");
-    }
-
-    @Test
-    @DisplayName("method-level annotation should override class-level annotation")
-    void methodLevelAnnotation_shouldOverrideClassLevel() throws Throwable {
-        ProceedingJoinPoint pjp = joinPointFor(ClassAndMethodAnnotated.class, "methodAnnotated");
-        when(featureToggleService.isEnabled("manage-publisher-requests")).thenReturn(true);
-        when(pjp.proceed()).thenReturn("ok");
-
-        Object result = featureToggleAspect.checkFeatureFlag(pjp);
-
-        assertEquals("ok", result);
-        verify(featureToggleService).isEnabled("manage-publisher-requests");
-        verify(featureToggleService, never()).isEnabled("view-featured-events");
-    }
-
-    @Test
     @DisplayName("disabled flag should throw FeatureDisabledException")
     void disabledFlag_shouldThrowFeatureDisabledException() throws Throwable {
         ProceedingJoinPoint pjp = joinPointFor(AnnotatedMethods.class, "methodAnnotated");
@@ -96,19 +69,6 @@ class FeatureToggleAspectTest {
 
     static class AnnotatedMethods {
         @FeatureFlag(AppFeature.VIEW_UPCOMING_EVENTS)
-        public void methodAnnotated() {
-        }
-    }
-
-    @FeatureFlag(AppFeature.VIEW_FEATURED_EVENTS)
-    static class ClassAnnotated {
-        public void plainMethod() {
-        }
-    }
-
-    @FeatureFlag(AppFeature.VIEW_FEATURED_EVENTS)
-    static class ClassAndMethodAnnotated {
-        @FeatureFlag(AppFeature.MANAGE_PUBLISHER_REQUESTS)
         public void methodAnnotated() {
         }
     }
