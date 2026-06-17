@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AppFeature {
     VIEW_UPCOMING_EVENTS("view-upcoming-events"),
-    SEND_WELCOME_EMAIL("send-welcome-email"),
     SEND_NEW_EVENT_NOTIFICATION_EMAIL("send-new-event-notification-email");
     private final String unleashKey;
 
