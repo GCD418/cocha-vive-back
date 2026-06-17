@@ -54,7 +54,6 @@ public class EventController {
     }
 
     @GetMapping("/events/upcoming")
-    @FeatureFlag(AppFeature.VIEW_UPCOMING_EVENTS)
     public List<EventResponseDTO> getUpcomingEvents(){
         return eventService.toResponseDtoList(eventService.getUpcoming());
     }
