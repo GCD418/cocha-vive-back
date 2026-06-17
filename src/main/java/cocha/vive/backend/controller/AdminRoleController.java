@@ -32,6 +32,11 @@ public class AdminRoleController {
     private final AdminRoleService adminRoleService;
 
     @Operation(summary = "Get all users")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "User list retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden – requires SUPERADMIN or ADMIN role")
+    })
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'ADMIN')")
     public ResponseEntity<List<UserMeDTO>> getAllUsers() {
