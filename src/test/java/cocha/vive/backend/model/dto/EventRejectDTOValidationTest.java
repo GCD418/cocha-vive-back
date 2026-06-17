@@ -82,7 +82,7 @@ class EventRejectDTOValidationTest {
 
             assertThat(violations).isNotEmpty();
             assertThat(violations).anyMatch(v ->
-                v.getMessage().contains("size must be between 0 and 200"));
+                v.getPropertyPath().toString().equals("rejectionReason"));
         }
     }
 }

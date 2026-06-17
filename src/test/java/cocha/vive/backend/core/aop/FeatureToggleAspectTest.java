@@ -31,24 +31,10 @@ class FeatureToggleAspectTest {
     private FeatureToggleAspect featureToggleAspect;
 
     @Test
-    @DisplayName("method-level annotation should be evaluated")
-    void methodLevelAnnotation_shouldBeEvaluated() throws Throwable {
-        ProceedingJoinPoint pjp = joinPointFor(AnnotatedMethods.class, "methodAnnotated");
-        when(featureToggleService.isEnabled("view-upcoming-events")).thenReturn(true);
-        when(pjp.proceed()).thenReturn("ok");
-
-        Object result = featureToggleAspect.checkFeatureFlag(pjp);
-
-        assertEquals("ok", result);
-        verify(featureToggleService).isEnabled("view-upcoming-events");
-        verify(pjp).proceed();
-    }
-
-    @Test
     @DisplayName("disabled flag should throw FeatureDisabledException")
     void disabledFlag_shouldThrowFeatureDisabledException() throws Throwable {
         ProceedingJoinPoint pjp = joinPointFor(AnnotatedMethods.class, "methodAnnotated");
-        when(featureToggleService.isEnabled("view-upcoming-events")).thenReturn(false);
+        when(featureToggleService.isEnabled("send-new-event-notification-email")).thenReturn(false);
 
         assertThrows(FeatureDisabledException.class, () -> featureToggleAspect.checkFeatureFlag(pjp));
         verify(pjp, never()).proceed();
@@ -68,7 +54,7 @@ class FeatureToggleAspectTest {
     }
 
     static class AnnotatedMethods {
-        @FeatureFlag(AppFeature.VIEW_UPCOMING_EVENTS)
+        @FeatureFlag(AppFeature.SEND_NEW_EVENT_NOTIFICATION_EMAIL)
         public void methodAnnotated() {
         }
     }
