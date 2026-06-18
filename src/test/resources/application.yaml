@@ -41,8 +41,3 @@ cloudinary:
   api-key: test-key
   api-secret: test-secret
 
-unleash:
-  app-name: test-backend
-  api-url: http://localhost:4242/api/
-  api-token: test-token
-  environment: test

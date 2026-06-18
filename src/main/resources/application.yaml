@@ -102,9 +102,10 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
 
 unleash:
+  enabled: ${UNLEASH_ENABLED:false}
   app-name: cocha-vive-unleash
   instance-id: unleash-onboarding-instance
-  api-url: ${UNLEASH_API_URL}
-  api-token: ${UNLEASH_API_TOKEN}
-  environment: production
+  api-url: ${UNLEASH_API_URL:}
+  api-token: ${UNLEASH_API_TOKEN:}
+  environment: ${UNLEASH_ENVIRONMENT:production}
   fetch-toggles-interval: 15
