@@ -26,7 +26,11 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
 
-    @Operation(summary = "Complete current user's profile")
+    @Operation(
+        summary = "Complete current user's profile",
+        description = "Sets the national document number and extension for the authenticated user. " +
+                      "Required after first Google login before accessing the platform."
+    )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Profile updated successfully"),
         @ApiResponse(responseCode = "400", description = "Invalid request payload",
@@ -46,6 +50,13 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Get the current authenticated user's profile")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Current user profile retrieved successfully"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "404", description = "User not found",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
     @GetMapping("/me")
     public ResponseEntity<UserMeDTO> getCurrentUser() {
         return ResponseEntity.ok(userMapper.toMeDto(userService.getActualUser()));
